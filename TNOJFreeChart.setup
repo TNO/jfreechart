@@ -14,6 +14,22 @@
     name="tno.jfreechart"
     label="TNO JFreeChart">
   <setupTask
+      xsi:type="setup:VariableTask"
+      type="FILE"
+      name="oomph.setup.file.local"
+      defaultValue="I've used the GitHub url"
+      label="Downloaded Oomph setup file">
+    <description></description>
+  </setupTask>
+  <setupTask
+      xsi:type="setup:EclipseIniTask"
+      filter="(!(oomph.setup.file.local=I've used the GitHub url))"
+      option="-Doomph.redirection.tno.jfreechart.local"
+      value="=${oomph.setup.file.local|uri}->${git.clone.tno.jfreechart.location|uri}/TNOJFreeChart.setup"
+      vm="true">
+    <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
+  </setupTask>
+  <setupTask
       xsi:type="jdt:JRETask"
       version="JavaSE-1.8"
       location="${jre.location-1.8}"
@@ -46,6 +62,22 @@
       &lt;/section>
 
     </content>
+  </setupTask>
+  <setupTask
+      xsi:type="setup:CompoundTask"
+      name="Preferences">
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.eclipse.oomph.setup.ui">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.eclipse.oomph.setup.ui/skip.startup.tasks"
+          value="true"/>
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.eclipse.oomph.setup.ui/showToolBarContributions"
+          value="true"/>
+    </setupTask>
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task">
@@ -95,7 +127,7 @@
       label="Master">
     <setupTask
         xsi:type="setup:EclipseIniTask"
-        option="-Doomph.redirection.tno.jfreechart"
+        option="-Doomph.redirection.tno.jfreechart.github"
         value="=https://raw.githubusercontent.com/TNO/jfreechart/master/TNOJFreeChart.setup->${git.clone.tno.jfreechart.location|uri}/TNOJFreeChart.setup"
         vm="true">
       <description>Set an Oomph redirection system property to redirect the logical location of this setup to its physical location in the Git clone.</description>
