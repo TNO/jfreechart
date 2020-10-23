@@ -39,7 +39,13 @@
  *                   Peter Kolb (patches 1934255 and 2603321);
  *                   Andrew Mickish (patch 1870189);
  *                   Fawad Halim (bug 2201869);
+ *                   Yuri Blankenstein;
  *
+ * Changes
+ * -------
+ * ------------- JFREECHART 1.5.x ---------------------------------------------
+ * 23-Oct-2020 : Allow query the auto-range of a ValueAxis.
+ * 
  */
 
 package org.jfree.chart.axis;
@@ -1154,12 +1160,11 @@ public class DateAxis extends ValueAxis implements Cloneable, Serializable {
      * Rescales the axis to ensure that all data is visible.
      */
     @Override
-    protected void autoAdjustRange() {
-
+    public Range calculateAutoRange(boolean adhereToMax) {
         Plot plot = getPlot();
 
         if (plot == null) {
-            return;  // no plot, no data
+            return null;  // no plot, no data
         }
 
         if (plot instanceof ValueAxisPlot) {
@@ -1170,15 +1175,15 @@ public class DateAxis extends ValueAxis implements Cloneable, Serializable {
                 r = new DateRange();
             }
 
-            long upper = this.timeline.toTimelineValue(
-                    (long) r.getUpperBound());
-            long lower;
+			long upper = this.timeline.toTimelineValue((long) r.getUpperBound());
+			long lower = this.timeline.toTimelineValue((long) r.getLowerBound());
             long fixedAutoRange = (long) getFixedAutoRange();
-            if (fixedAutoRange > 0.0) {
-                lower = upper - fixedAutoRange;
+            if (adhereToMax && fixedAutoRange > 0.0) {
+            	Range aligned = getAutoRangeAlign().align(new Range(lower, upper), fixedAutoRange);
+                lower = Math.round(aligned.getLowerBound());
+                upper = Math.round(aligned.getUpperBound());
             }
             else {
-                lower = this.timeline.toTimelineValue((long) r.getLowerBound());
                 double range = upper - lower;
                 long minRange = (long) getAutoRangeMinimumSize();
                 if (range < minRange) {
@@ -1192,10 +1197,9 @@ public class DateAxis extends ValueAxis implements Cloneable, Serializable {
 
             upper = this.timeline.toMillisecond(upper);
             lower = this.timeline.toMillisecond(lower);
-            DateRange dr = new DateRange(new Date(lower), new Date(upper));
-            setRange(dr, false, false);
+            return new DateRange(new Date(lower), new Date(upper));
         }
-
+        return null;
     }
 
     /**
