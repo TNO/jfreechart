@@ -31,7 +31,13 @@
  *
  * Original Author:  Anthony Boulestreau;
  * Contributor(s):   David Gilbert (for Object Refinery Limited);
+ *                   Yuri Blankenstein;
  *
+ * Changes
+ * -------
+ * ------------- JFREECHART 1.5.x ---------------------------------------------
+ * 23-Oct-2020 : Allow query the auto-range of a ValueAxis.
+ * 
  */
 
 package org.jfree.chart.axis;
@@ -398,10 +404,10 @@ public class SymbolAxis extends NumberAxis implements Serializable {
      * Rescales the axis to ensure that all data is visible.
      */
     @Override
-    protected void autoAdjustRange() {
+    public Range calculateAutoRange(boolean adhereToMax) {
         Plot plot = getPlot();
         if (plot == null) {
-            return;  // no plot, no data
+            return null;  // no plot, no data
         }
 
         if (plot instanceof ValueAxisPlot) {
@@ -455,8 +461,9 @@ public class SymbolAxis extends NumberAxis implements Serializable {
                     lower = lower - lowerMargin;
                 }
             }
-            setRange(new Range(lower, upper), false, false);
+            return new Range(lower, upper);
         }
+        return null;
     }
 
     /**

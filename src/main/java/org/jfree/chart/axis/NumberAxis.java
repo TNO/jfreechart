@@ -32,6 +32,12 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   Laurence Vanhelsuwe;
  *                   Peter Kolb (patches 1934255 and 2603321);
+ *                   Yuri Blankenstein;
+ *
+ * Changes
+ * -------
+ * ------------- JFREECHART 1.5.x ---------------------------------------------
+ * 23-Oct-2020 : Allow query the auto-range of a ValueAxis.
  * 
  */
 
@@ -353,11 +359,10 @@ public class NumberAxis extends ValueAxis implements Cloneable, Serializable {
      * Rescales the axis to ensure that all data is visible.
      */
     @Override
-    protected void autoAdjustRange() {
-
+    public Range calculateAutoRange(boolean adhereToMax) {
         Plot plot = getPlot();
         if (plot == null) {
-            return;  // no plot, no data
+            return null;  // no plot, no data
         }
 
         if (plot instanceof ValueAxisPlot) {
@@ -387,8 +392,10 @@ public class NumberAxis extends ValueAxis implements Cloneable, Serializable {
 
             // if fixed auto range, then derive lower bound...
             double fixedAutoRange = getFixedAutoRange();
-            if (fixedAutoRange > 0.0) {
-                lower = upper - fixedAutoRange;
+            if (adhereToMax && fixedAutoRange > 0.0) {
+            	Range aligned = getAutoRangeAlign().align(new Range(lower, upper), fixedAutoRange);
+                lower = aligned.getLowerBound();
+                upper = aligned.getUpperBound();
             }
             else {
                 // ensure the autorange is at least <minRange> in size...
@@ -436,9 +443,9 @@ public class NumberAxis extends ValueAxis implements Cloneable, Serializable {
                 }
             }
 
-            setRange(new Range(lower, upper), false, false);
+            return new Range(lower, upper);
         }
-
+        return null;
     }
 
     /**

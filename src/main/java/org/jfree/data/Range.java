@@ -34,6 +34,7 @@
  *                   Bill Kelemen;
  *                   Nicolas Brodu;
  *                   Sergei Ivanov;
+ *                   Yuri Blankenstein;
  *
  * Changes (from 23-Jun-2001)
  * --------------------------
@@ -58,6 +59,9 @@
  *               Ivanov (DG);
  * 08-Jan-2012 : New method combineIgnoringNaN() (DG);
  * 23-Feb-2014 : Added isNaNRange() method (DG);
+ * ------------- JFREECHART 1.5.x ---------------------------------------------
+ * 23-Oct-2020 : Allow query the auto-range of a ValueAxis.
+ * 				 Limit maximum zoom (i.e. rangeMinimumSize)
  * 
  */
 
@@ -142,6 +146,18 @@ public strictfp class Range implements Serializable {
      */
     public boolean contains(double value) {
         return (value >= this.lower && value <= this.upper);
+    }
+
+    /**
+     * Returns <code>true</code> if the range contains the specified range and
+     * <code>false</code> otherwise.
+     *
+     * @param value  the range to lookup.
+     *
+     * @return <code>true</code> if the range contains the specified range.
+     */
+    public boolean contains(Range range) {
+        return (range.lower >= this.lower && range.upper <= this.upper);
     }
 
     /**
