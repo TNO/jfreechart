@@ -25,7 +25,7 @@
  * Other names may be trademarks of their respective owners.]
  *
  * --------------
- * ValueAxis.java
+ * RangeAlign.java
  * --------------
  * (C) Copyright 2000-2020, ESI (TNO) and Contributors.
  *
