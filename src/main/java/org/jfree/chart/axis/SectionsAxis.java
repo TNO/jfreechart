@@ -68,9 +68,14 @@ import org.jfree.chart.ui.TextAnchor;
 import org.jfree.chart.util.Args;
 import org.jfree.data.Range;
 
+/**
+ * An {@link Axis} that stacks multiple axes into a single axis, creating
+ * sections. Use this axis to combine e.g. {@link NumberAxis} and
+ * {@link SymbolAxis} in a single axis.
+ */
 public class SectionsAxis extends ValueAxis {
 	private static final long serialVersionUID = 6418801819447160805L;
-	
+
 	public enum TooltipMode {
 		/**
 		 * Don't use tooltips.
@@ -110,7 +115,7 @@ public class SectionsAxis extends ValueAxis {
 	private double sectionGap;
 
 	private int tickLabelMaxLength;
-	
+
 	private TooltipMode tooltipMode;
 
 	/** Flag that indicates whether or not grid bands are visible. */
@@ -122,10 +127,18 @@ public class SectionsAxis extends ValueAxis {
 	/** The paint used to fill the alternate grid bands. */
 	private transient Paint gridBandAlternatePaint;
 
+	/**
+	 * Default constructor.
+	 */
 	public SectionsAxis() {
 		this(null);
 	}
-	
+
+	/**
+	 * Constructs a sections axis, using default values where necessary.
+	 *
+	 * @param label the axis label ({@code null} permitted).
+	 */
 	public SectionsAxis(String label) {
 		super(label, new StandardTickUnitSource());
 		setLowerMargin(DEFAULT_LOWER_MARGIN);
@@ -138,131 +151,145 @@ public class SectionsAxis extends ValueAxis {
 		this.tooltipMode = TooltipMode.MAX_EXCEEDED;
 	}
 
+	/**
+	 * Get the maximum number of section label characters visible.
+	 * 
+	 * @return the maximum number of section label characters visible
+	 * @see #setTickLabelMaxLength(int)
+	 */
 	public int getTickLabelMaxLength() {
 		return tickLabelMaxLength;
 	}
-	
+
 	/**
 	 * Set the maximum number of section label characters visible. If a section
 	 * label is longer, its name will be clipped to {@link #getTickLabelMaxLength()}
 	 * and post-fixed with '...'.
 	 * 
-	 * @param tickLabelMaxLength
-	 *            a positive number or {@link #NO_TICK_LABEL_MAX_LENGTH}.
+	 * @param tickLabelMaxLength a positive number or
+	 *                           {@link #NO_TICK_LABEL_MAX_LENGTH}.
 	 */
 	public void setTickLabelMaxLength(int tickLabelMaxLength) {
 		this.tickLabelMaxLength = tickLabelMaxLength;
 		fireChangeEvent();
 	}
-	
+
+	/**
+	 * Creates a tick label that adheres to the restrictions of this
+	 * {@link SectionsAxis}
+	 * 
+	 * @param sectionLabel the label to format
+	 * @return a tick label that adheres to the restrictions of this
+	 *         {@link SectionsAxis}
+	 */
 	protected String createTickLabel(String sectionLabel) {
 		if (null == sectionLabel || tickLabelMaxLength < 0 || sectionLabel.length() <= tickLabelMaxLength) {
 			return sectionLabel;
 		}
 		return sectionLabel.substring(0, tickLabelMaxLength) + "...";
 	}
-	
+
 	public TooltipMode getTooltipMode() {
 		return tooltipMode;
 	}
-	
+
 	public void setTooltipMode(TooltipMode tooltipMode) {
 		Args.nullNotPermitted(tooltipMode, "TooltipMode");
 		this.tooltipMode = tooltipMode;
 	}
-	
+
 	public Collection<Section> getSections() {
 		return Collections.unmodifiableCollection(sections);
 	}
-	
+
 	public double getSectionGap() {
 		return sectionGap;
 	}
-	
+
 	public void setSectionGap(double sectionGap) {
 		this.sectionGap = sectionGap;
 	}
-	
-    /**
-     * Returns <code>true</code> if the grid bands are showing, and
-     * <code>false</code> otherwise.
-     *
-     * @return <code>true</code> if the grid bands are showing, and
-     *         <code>false</code> otherwise.
-     *
-     * @see #setGridBandsVisible(boolean)
-     */
-    public boolean isGridBandsVisible() {
-        return this.gridBandsVisible;
-    }
 
-    /**
-     * Sets the visibility of the grid bands and notifies registered
-     * listeners that the axis has been modified.
-     *
-     * @param flag  the new setting.
-     *
-     * @see #isGridBandsVisible()
-     */
-    public void setGridBandsVisible(boolean flag) {
-        this.gridBandsVisible = flag;
-        fireChangeEvent();
-    }
+	/**
+	 * Returns <code>true</code> if the grid bands are showing, and
+	 * <code>false</code> otherwise.
+	 *
+	 * @return <code>true</code> if the grid bands are showing, and
+	 *         <code>false</code> otherwise.
+	 *
+	 * @see #setGridBandsVisible(boolean)
+	 */
+	public boolean isGridBandsVisible() {
+		return this.gridBandsVisible;
+	}
 
-    /**
-     * Returns the paint used to color the grid bands.
-     *
-     * @return The grid band paint (never <code>null</code>).
-     *
-     * @see #setGridBandPaint(Paint)
-     * @see #isGridBandsVisible()
-     */
-    public Paint getGridBandPaint() {
-        return this.gridBandPaint;
-    }
+	/**
+	 * Sets the visibility of the grid bands and notifies registered listeners that
+	 * the axis has been modified.
+	 *
+	 * @param flag the new setting.
+	 *
+	 * @see #isGridBandsVisible()
+	 */
+	public void setGridBandsVisible(boolean flag) {
+		this.gridBandsVisible = flag;
+		fireChangeEvent();
+	}
 
-    /**
-     * Sets the grid band paint and sends an {@link AxisChangeEvent} to
-     * all registered listeners.
-     *
-     * @param paint  the paint (<code>null</code> not permitted).
-     *
-     * @see #getGridBandPaint()
-     */
-    public void setGridBandPaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.gridBandPaint = paint;
-        fireChangeEvent();
-    }
+	/**
+	 * Returns the paint used to color the grid bands.
+	 *
+	 * @return The grid band paint (never <code>null</code>).
+	 *
+	 * @see #setGridBandPaint(Paint)
+	 * @see #isGridBandsVisible()
+	 */
+	public Paint getGridBandPaint() {
+		return this.gridBandPaint;
+	}
 
-    /**
-     * Returns the paint used for alternate grid bands.
-     *
-     * @return The paint (never <code>null</code>).
-     *
-     * @see #setGridBandAlternatePaint(Paint)
-     * @see #getGridBandPaint()
-     */
-    public Paint getGridBandAlternatePaint() {
-        return this.gridBandAlternatePaint;
-    }
+	/**
+	 * Sets the grid band paint and sends an {@link AxisChangeEvent} to all
+	 * registered listeners.
+	 *
+	 * @param paint the paint (<code>null</code> not permitted).
+	 *
+	 * @see #getGridBandPaint()
+	 */
+	public void setGridBandPaint(Paint paint) {
+		Args.nullNotPermitted(paint, "paint");
+		this.gridBandPaint = paint;
+		fireChangeEvent();
+	}
 
-    /**
-     * Sets the paint used for alternate grid bands and sends a
-     * {@link AxisChangeEvent} to all registered listeners.
-     *
-     * @param paint  the paint (<code>null</code> not permitted).
-     *
-     * @see #getGridBandAlternatePaint()
-     * @see #setGridBandPaint(Paint)
-     */
-    public void setGridBandAlternatePaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.gridBandAlternatePaint = paint;
-        fireChangeEvent();
-    }
+	/**
+	 * Returns the paint used for alternate grid bands.
+	 *
+	 * @return The paint (never <code>null</code>).
+	 *
+	 * @see #setGridBandAlternatePaint(Paint)
+	 * @see #getGridBandPaint()
+	 */
+	public Paint getGridBandAlternatePaint() {
+		return this.gridBandAlternatePaint;
+	}
 
-    public Section nextSection(String label) {
+	/**
+	 * Sets the paint used for alternate grid bands and sends a
+	 * {@link AxisChangeEvent} to all registered listeners.
+	 *
+	 * @param paint the paint (<code>null</code> not permitted).
+	 *
+	 * @see #getGridBandAlternatePaint()
+	 * @see #setGridBandPaint(Paint)
+	 */
+	public void setGridBandAlternatePaint(Paint paint) {
+		Args.nullNotPermitted(paint, "paint");
+		this.gridBandAlternatePaint = paint;
+		fireChangeEvent();
+	}
+
+	public Section nextSection(String label) {
 		return nextSection(label, DEFAULT_SECTION_LENGTH, sectionGap);
 	}
 
@@ -341,10 +368,6 @@ public class SectionsAxis extends ValueAxis {
 		}
 	}
 
-	/**
-	 * @author yblanken 30/03/2018 Refactored to be able to query the auto-range of
-	 *         a {@link ValueAxis}.
-	 */
 	@Override
 	public Range calculateAutoRange(boolean adhereToMax) {
 		// no plot, no data
@@ -360,14 +383,14 @@ public class SectionsAxis extends ValueAxis {
 				lower = sections.first().getLowerBound();
 				upper = sections.last().getUpperBound();
 			}
-			
-            double fixedAutoRange = getFixedAutoRange();
-            if (adhereToMax && fixedAutoRange > 0.0) {
-            	Range aligned = getAutoRangeAlign().align(new Range(lower, upper), fixedAutoRange);
-                lower = aligned.getLowerBound();
-                upper = aligned.getUpperBound();
-            } else {
-	            double range = upper - lower;
+
+			double fixedAutoRange = getFixedAutoRange();
+			if (adhereToMax && fixedAutoRange > 0.0) {
+				Range aligned = getAutoRangeAlign().align(new Range(lower, upper), fixedAutoRange);
+				lower = aligned.getLowerBound();
+				upper = aligned.getUpperBound();
+			} else {
+				double range = upper - lower;
 				// ensure the auto-range is at least <minRange> in size...
 				double minRange = getAutoRangeMinimumSize();
 				if (range < minRange) {
@@ -378,7 +401,7 @@ public class SectionsAxis extends ValueAxis {
 				// Add the margins
 				upper += upper * getUpperMargin();
 				lower -= lower * getLowerMargin();
-            }
+			}
 
 			return new Range(lower, upper);
 		}
@@ -409,12 +432,12 @@ public class SectionsAxis extends ValueAxis {
 
 	protected void createTickLabelEntities(Graphics2D g2, double cursor, Rectangle2D dataArea, RectangleEdge edge,
 			AxisState state, PlotRenderingInfo plotState) {
-        if (plotState == null || plotState.getOwner() == null || plotState.getOwner().getEntityCollection() == null) {
-            return;  // no need to create entity if we can't save it anyways...
-        }
+		if (plotState == null || plotState.getOwner() == null || plotState.getOwner().getEntityCollection() == null) {
+			return; // no need to create entity if we can't save it anyways...
+		}
 		EntityCollection entityCollection = plotState.getOwner().getEntityCollection();
 		for (Object tick : state.getTicks()) {
-			if (tick instanceof SectionTick && ((SectionTick)tick).getTooltipText() != null) {
+			if (tick instanceof SectionTick && ((SectionTick) tick).getTooltipText() != null) {
 				Shape tickTextBounds = calculateTickTextBounds((SectionTick) tick, g2, cursor, dataArea, edge);
 				entityCollection.add(new TickLabelEntity(tickTextBounds, ((SectionTick) tick).getTooltipText(), null));
 			}
@@ -425,17 +448,13 @@ public class SectionsAxis extends ValueAxis {
 	 * Draws the grid bands. Alternate bands are colored using
 	 * <CODE>gridBandPaint</CODE> (<CODE>DEFAULT_GRID_BAND_PAINT</CODE> by default).
 	 *
-	 * @param g2
-	 *            the graphics target (<code>null</code> not permitted).
-	 * @param plotArea
-	 *            the area within which the plot is drawn (<code>null</code> not
-	 *            permitted).
-	 * @param dataArea
-	 *            the data area to which the axes are aligned (<code>null</code> not
-	 *            permitted).
-	 * @param edge
-	 *            the edge to which the axis is aligned (<code>null</code> not
-	 *            permitted).
+	 * @param g2       the graphics target (<code>null</code> not permitted).
+	 * @param plotArea the area within which the plot is drawn (<code>null</code>
+	 *                 not permitted).
+	 * @param dataArea the data area to which the axes are aligned
+	 *                 (<code>null</code> not permitted).
+	 * @param edge     the edge to which the axis is aligned (<code>null</code> not
+	 *                 permitted).
 	 */
 	protected void drawGridBands(Graphics2D g2, Rectangle2D plotArea, Rectangle2D dataArea, RectangleEdge edge) {
 		Shape savedClip = g2.getClip();
@@ -452,16 +471,12 @@ public class SectionsAxis extends ValueAxis {
 	 * Draws the grid bands for the axis when it is at the top or bottom of the
 	 * plot.
 	 *
-	 * @param g2
-	 *            the graphics target (<code>null</code> not permitted).
-	 * @param plotArea
-	 *            the area within which the plot is drawn (not used here).
-	 * @param dataArea
-	 *            the area for the data (to which the axes are aligned,
-	 *            <code>null</code> not permitted).
-	 * @param edge
-	 *            the edge to which the axis is aligned (<code>null</code> not
-	 *            permitted).
+	 * @param g2       the graphics target (<code>null</code> not permitted).
+	 * @param plotArea the area within which the plot is drawn (not used here).
+	 * @param dataArea the area for the data (to which the axes are aligned,
+	 *                 <code>null</code> not permitted).
+	 * @param edge     the edge to which the axis is aligned (<code>null</code> not
+	 *                 permitted).
 	 */
 	protected void drawGridBandsHorizontal(Graphics2D g2, Rectangle2D plotArea, Rectangle2D dataArea,
 			RectangleEdge edge) {
@@ -472,19 +487,17 @@ public class SectionsAxis extends ValueAxis {
 	 * Draws the grid bands for an axis that is aligned to the left or right of the
 	 * data area (that is, a vertical axis).
 	 *
-	 * @param g2
-	 *            the graphics target (<code>null</code> not permitted).
-	 * @param plotArea
-	 *            the area within which the plot is drawn (not used here).
-	 * @param dataArea
-	 *            the area for the data (to which the axes are aligned,
-	 *            <code>null</code> not permitted).
-	 * @param firstGridBandIsDark
-	 *            True: the first grid band takes the color of
-	 *            <CODE>gridBandPaint</CODE>. False: the second grid band takes the
-	 *            color of <CODE>gridBandPaint</CODE>.
-	 * @param ticks
-	 *            a list of ticks (<code>null</code> not permitted).
+	 * @param g2                  the graphics target (<code>null</code> not
+	 *                            permitted).
+	 * @param plotArea            the area within which the plot is drawn (not used
+	 *                            here).
+	 * @param dataArea            the area for the data (to which the axes are
+	 *                            aligned, <code>null</code> not permitted).
+	 * @param firstGridBandIsDark True: the first grid band takes the color of
+	 *                            <CODE>gridBandPaint</CODE>. False: the second grid
+	 *                            band takes the color of
+	 *                            <CODE>gridBandPaint</CODE>.
+	 * @param ticks               a list of ticks (<code>null</code> not permitted).
 	 */
 	protected void drawGridBandsVertical(Graphics2D g2, Rectangle2D plotArea, Rectangle2D dataArea,
 			RectangleEdge edge) {
@@ -518,7 +531,7 @@ public class SectionsAxis extends ValueAxis {
 				}
 			}
 			useAlternatePaint = !useAlternatePaint;
-			
+
 			Rectangle2D band = new Rectangle2D.Double(xx + outlineStrokeWidth, Math.min(yMin, yMax),
 					dataArea.getMaxX() - xx - outlineStrokeWidth, Math.abs(yMax - yMin));
 			g2.fill(band);
@@ -544,20 +557,17 @@ public class SectionsAxis extends ValueAxis {
 	 * Calculates the positions of the tick labels for the axis, storing the results
 	 * in the tick label list (ready for drawing).
 	 *
-	 * @param g2
-	 *            the graphics device.
-	 * @param dataArea
-	 *            the area in which the plot should be drawn.
-	 * @param edge
-	 *            the location of the axis.
+	 * @param g2       the graphics device.
+	 * @param dataArea the area in which the plot should be drawn.
+	 * @param edge     the location of the axis.
 	 *
 	 * @return The ticks.
 	 */
 	protected List<ValueTick> refreshTicksVertical(Graphics2D g2, Rectangle2D dataArea, RectangleEdge edge) {
-        Font tickLabelFont = getTickLabelFont();
-        g2.setFont(tickLabelFont);
+		Font tickLabelFont = getTickLabelFont();
+		g2.setFont(tickLabelFont);
 
-        double cursor = 0.0;
+		double cursor = 0.0;
 		TextAnchor textAnchor;
 		TextAnchor rotationAnchor;
 		double angle;
@@ -583,10 +593,10 @@ public class SectionsAxis extends ValueAxis {
 			}
 		}
 
-        // Creating the ticks and check if labels do not overlap
+		// Creating the ticks and check if labels do not overlap
 		List<ValueTick> ticks = new ArrayList<>();
 		Area ticksTextArea = new Area();
-		
+
 		sections.stream().filter(s -> getRange().contains(s.getRange().getCentralValue())).forEach(s -> {
 			String sectionLabel = s.getLabel();
 			String tickLabel = createTickLabel(sectionLabel);
@@ -619,7 +629,8 @@ public class SectionsAxis extends ValueAxis {
 			double yLower = valueToJava2D(sectionRange.getLowerBound(), dataArea, edge);
 			double yUpper = valueToJava2D(sectionRange.getUpperBound(), dataArea, edge);
 			// Calculate ticks for the scaled data area
-			Rectangle2D sectionDataArea = new Rectangle2D.Double(dataArea.getX(), yLower, dataArea.getWidth(), Math.abs(yUpper - yLower));
+			Rectangle2D sectionDataArea = new Rectangle2D.Double(dataArea.getX(), yLower, dataArea.getWidth(),
+					Math.abs(yUpper - yLower));
 
 			List<?> sectionTicks = s.axis.refreshTicks(g2, new AxisState(cursor), sectionDataArea, edge);
 			for (Object tick : sectionTicks) {
@@ -627,17 +638,19 @@ public class SectionsAxis extends ValueAxis {
 					NumberTick nt = (NumberTick) tick;
 					// Scale the ticks back to the original data area
 					double scaledValue = AxisUtils.scaleValue(nt.getValue(), s.axis.getRange(), sectionRange);
-					NumberTick scaledTick = new NumberTick(nt.getTickType(), scaledValue, nt.getText(), nt.getTextAnchor(), nt.getRotationAnchor(), nt.getAngle());
+					NumberTick scaledTick = new NumberTick(nt.getTickType(), scaledValue, nt.getText(),
+							nt.getTextAnchor(), nt.getRotationAnchor(), nt.getAngle());
 
 					// Avoid to draw overlapping ticks labels
 					Shape tickTextBounds = calculateTickTextBounds(scaledTick, g2, cursor, dataArea, edge);
-		            if (intersect(ticksTextArea, tickTextBounds)) {
-		            	// Just add the tick, but without label
-		            	ticks.add(new NumberTick(nt.getTickType(), scaledValue, null, nt.getTextAnchor(), nt.getRotationAnchor(), nt.getAngle()));
-		            } else {
-		            	ticksTextArea.add(new Area(tickTextBounds));
-		    			ticks.add(scaledTick);
-		            }
+					if (intersect(ticksTextArea, tickTextBounds)) {
+						// Just add the tick, but without label
+						ticks.add(new NumberTick(nt.getTickType(), scaledValue, null, nt.getTextAnchor(),
+								nt.getRotationAnchor(), nt.getAngle()));
+					} else {
+						ticksTextArea.add(new Area(tickTextBounds));
+						ticks.add(scaledTick);
+					}
 				} else {
 					System.err.println("Tick type not supported for section axis: " + tick);
 				}
@@ -646,23 +659,24 @@ public class SectionsAxis extends ValueAxis {
 		});
 		return ticks;
 	}
-	
+
 	private boolean intersect(Shape a, Shape b) {
 		final Area areaA = new Area(a);
 		final Area areaB = new Area(b);
 		areaA.intersect(areaB);
 		return !areaA.isEmpty();
 	}
-	
-	private Shape calculateTickTextBounds(ValueTick tick, Graphics2D g2, double cursor, Rectangle2D dataArea, RectangleEdge edge) {
+
+	private Shape calculateTickTextBounds(ValueTick tick, Graphics2D g2, double cursor, Rectangle2D dataArea,
+			RectangleEdge edge) {
 		String tickText = tick.getText();
 		if (null == tickText || tickText.isEmpty()) {
 			return new Area();
 		}
-		
+
 		Font tickLabelFont = getTickLabelFont();
-        g2.setFont(tickLabelFont);
-        
+		g2.setFont(tickLabelFont);
+
 		float[] anchorPoint = calculateAnchorPoint(tick, cursor, dataArea, edge);
 		return TextUtils.calculateRotatedStringBounds(tickText, g2, anchorPoint[0], anchorPoint[1],
 				tick.getTextAnchor(), tick.getAngle(), tick.getRotationAnchor());
@@ -727,7 +741,7 @@ public class SectionsAxis extends ValueAxis {
 			this.gridBandAlternatePaint = paint;
 			fireChangeEvent();
 		}
-		
+
 		public Paint getGridBandAlternatePaint() {
 			return null == gridBandAlternatePaint ? gridBandPaint : gridBandAlternatePaint;
 		}
@@ -735,7 +749,7 @@ public class SectionsAxis extends ValueAxis {
 		public Range getGridBandRange() {
 			return axis.getRange();
 		}
-		
+
 		public void setGridBandNumberRange(Range gridBandRange, boolean isInteger) {
 			NumberAxis gridBandAxis = new NumberAxis(this.label);
 			if (isInteger) {
@@ -744,7 +758,7 @@ public class SectionsAxis extends ValueAxis {
 			gridBandAxis.setMinorTickCount(1);
 			setGridBandAxis(gridBandRange, gridBandAxis);
 		}
-		
+
 		protected void setGridBandAxis(Range gridBandRange, ValueAxis gridBandAxis) {
 			if (null != this.axis) {
 				this.axis.removeChangeListener(Section.this);
@@ -755,7 +769,7 @@ public class SectionsAxis extends ValueAxis {
 				this.axis.setRange(gridBandRange, true, true);
 			}
 		}
-		
+
 		@Override
 		public void axisChanged(AxisChangeEvent event) {
 			fireChangeEvent();
