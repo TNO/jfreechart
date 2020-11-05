@@ -41,7 +41,6 @@ import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.util.stream.Collectors;
 
-import org.jfree.chart.axis.SectionsAxis.Section;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.Range;
 
@@ -70,11 +69,11 @@ public final class AxisUtils {
 		axis.setFixedDimension(fixedDimension);
 	}
 	
-	public static void calculateAndApplyFixedDimension(SectionsAxis axis, RectangleEdge edge) {
+	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge) {
 		calculateAndApplyFixedDimension(axis, edge, DEFAULT_FONT_RENDER_CONTEXT);
 	}
 	
-	public static void calculateAndApplyFixedDimension(SectionsAxis axis, RectangleEdge edge, FontRenderContext frc) {
+	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge, FontRenderContext frc) {
 		double fixedDimension = 0;
 		for (String sectionLabel : axis.getSections().stream().map(Section::getLabel).collect(Collectors.toList())) {
 			if (null == sectionLabel) continue;

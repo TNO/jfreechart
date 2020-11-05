@@ -46,20 +46,15 @@ import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.entity.TickLabelEntity;
 import org.jfree.chart.event.AxisChangeEvent;
-import org.jfree.chart.event.AxisChangeListener;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.ValueAxisPlot;
 import org.jfree.chart.text.TextUtils;
@@ -70,10 +65,10 @@ import org.jfree.data.Range;
 
 /**
  * An {@link Axis} that stacks multiple axes into a single axis, creating
- * sections. Use this axis to combine e.g. {@link NumberAxis} and
+ * {@link Section}s. Use this axis to combine e.g. {@link NumberAxis} and
  * {@link SymbolAxis} in a single axis.
  */
-public class SectionsAxis extends ValueAxis {
+public class SectionAxis extends ValueAxis {
 	private static final long serialVersionUID = 6418801819447160805L;
 
 	public enum TooltipMode {
@@ -110,9 +105,9 @@ public class SectionsAxis extends ValueAxis {
 
 	public static final int NO_TICK_LABEL_MAX_LENGTH = -1;
 
-	private final SortedSet<Section> sections = new TreeSet<>();
+	private final LinkedList<Section> sections = new LinkedList<>();
 
-	private double sectionGap;
+	private double baseSectionGap;
 
 	private int tickLabelMaxLength;
 
@@ -122,31 +117,31 @@ public class SectionsAxis extends ValueAxis {
 	private boolean gridBandsVisible;
 
 	/** The paint used to color the grid bands (if the bands are visible). */
-	private transient Paint gridBandPaint;
+	private transient Paint baseGridBandPaint;
 
 	/** The paint used to fill the alternate grid bands. */
-	private transient Paint gridBandAlternatePaint;
+	private transient Paint baseGridBandAlternatePaint;
 
 	/**
 	 * Default constructor.
 	 */
-	public SectionsAxis() {
+	public SectionAxis() {
 		this(null);
 	}
 
 	/**
-	 * Constructs a sections axis, using default values where necessary.
+	 * Constructs a section axis, using default values where necessary.
 	 *
 	 * @param label the axis label ({@code null} permitted).
 	 */
-	public SectionsAxis(String label) {
+	public SectionAxis(String label) {
 		super(label, new StandardTickUnitSource());
 		setLowerMargin(DEFAULT_LOWER_MARGIN);
 		setUpperMargin(DEFAULT_UPPER_MARGIN);
 		this.gridBandsVisible = true;
-		this.gridBandPaint = DEFAULT_GRID_BAND_PAINT;
-		this.gridBandAlternatePaint = DEFAULT_GRID_BAND_ALTERNATE_PAINT;
-		this.sectionGap = DEFAULT_SECTION_GAP;
+		this.baseGridBandPaint = DEFAULT_GRID_BAND_PAINT;
+		this.baseGridBandAlternatePaint = DEFAULT_GRID_BAND_ALTERNATE_PAINT;
+		this.baseSectionGap = DEFAULT_SECTION_GAP;
 		this.tickLabelMaxLength = NO_TICK_LABEL_MAX_LENGTH;
 		this.tooltipMode = TooltipMode.MAX_EXCEEDED;
 	}
@@ -176,11 +171,12 @@ public class SectionsAxis extends ValueAxis {
 
 	/**
 	 * Creates a tick label that adheres to the restrictions of this
-	 * {@link SectionsAxis}
+	 * {@link SectionAxis}
 	 * 
 	 * @param sectionLabel the label to format
 	 * @return a tick label that adheres to the restrictions of this
-	 *         {@link SectionsAxis}
+	 *         {@link SectionAxis}
+	 * @see #setTickLabelMaxLength(int)
 	 */
 	protected String createTickLabel(String sectionLabel) {
 		if (null == sectionLabel || tickLabelMaxLength < 0 || sectionLabel.length() <= tickLabelMaxLength) {
@@ -189,25 +185,25 @@ public class SectionsAxis extends ValueAxis {
 		return sectionLabel.substring(0, tickLabelMaxLength) + "...";
 	}
 
+	/**
+	 * Returns the {@link TooltipMode} to use for this axis.
+	 * 
+	 * @return the {@link TooltipMode} to use for this axis.
+	 * @see #setTooltipMode(TooltipMode)
+	 */
 	public TooltipMode getTooltipMode() {
 		return tooltipMode;
 	}
 
+	/**
+	 * Sets the {@link TooltipMode} to use for this axis.
+	 * 
+	 * @param tooltipMode the {@link TooltipMode} to use for this axis.
+	 * @see TooltipMode
+	 */
 	public void setTooltipMode(TooltipMode tooltipMode) {
 		Args.nullNotPermitted(tooltipMode, "TooltipMode");
 		this.tooltipMode = tooltipMode;
-	}
-
-	public Collection<Section> getSections() {
-		return Collections.unmodifiableCollection(sections);
-	}
-
-	public double getSectionGap() {
-		return sectionGap;
-	}
-
-	public void setSectionGap(double sectionGap) {
-		this.sectionGap = sectionGap;
 	}
 
 	/**
@@ -241,11 +237,11 @@ public class SectionsAxis extends ValueAxis {
 	 *
 	 * @return The grid band paint (never <code>null</code>).
 	 *
-	 * @see #setGridBandPaint(Paint)
+	 * @see #setBaseGridBandPaint(Paint)
 	 * @see #isGridBandsVisible()
 	 */
-	public Paint getGridBandPaint() {
-		return this.gridBandPaint;
+	public Paint getBaseGridBandPaint() {
+		return this.baseGridBandPaint;
 	}
 
 	/**
@@ -254,12 +250,29 @@ public class SectionsAxis extends ValueAxis {
 	 *
 	 * @param paint the paint (<code>null</code> not permitted).
 	 *
-	 * @see #getGridBandPaint()
+	 * @see #getBaseGridBandPaint()
 	 */
-	public void setGridBandPaint(Paint paint) {
+	public void setBaseGridBandPaint(Paint paint) {
 		Args.nullNotPermitted(paint, "paint");
-		this.gridBandPaint = paint;
+		this.baseGridBandPaint = paint;
 		fireChangeEvent();
+	}
+	
+	/**
+	 * Returns the paint used for the grid band of the section.
+	 *
+	 * @return The paint (never <code>null</code>).
+	 *
+	 * @see #setBaseGridBandPaint(Paint)
+	 * @see Section#setGridBandPaint(Paint)
+	 */
+	protected Paint getGridBandPaint(Section section) {
+		Args.nullNotPermitted(section, "section");
+		Paint paint = section.getGridBandPaint();
+		if (paint == null) {
+			paint = getBaseGridBandPaint();
+		}
+		return paint;
 	}
 
 	/**
@@ -267,11 +280,11 @@ public class SectionsAxis extends ValueAxis {
 	 *
 	 * @return The paint (never <code>null</code>).
 	 *
-	 * @see #setGridBandAlternatePaint(Paint)
-	 * @see #getGridBandPaint()
+	 * @see #setBaseGridBandAlternatePaint(Paint)
+	 * @see #isGridBandsVisible()
 	 */
-	public Paint getGridBandAlternatePaint() {
-		return this.gridBandAlternatePaint;
+	public Paint getBaseGridBandAlternatePaint() {
+		return this.baseGridBandAlternatePaint;
 	}
 
 	/**
@@ -280,42 +293,117 @@ public class SectionsAxis extends ValueAxis {
 	 *
 	 * @param paint the paint (<code>null</code> not permitted).
 	 *
-	 * @see #getGridBandAlternatePaint()
-	 * @see #setGridBandPaint(Paint)
+	 * @see #getBaseGridBandAlternatePaint()
+	 * @see #setBaseGridBandPaint(Paint)
 	 */
-	public void setGridBandAlternatePaint(Paint paint) {
+	public void setBaseGridBandAlternatePaint(Paint paint) {
 		Args.nullNotPermitted(paint, "paint");
-		this.gridBandAlternatePaint = paint;
+		this.baseGridBandAlternatePaint = paint;
 		fireChangeEvent();
 	}
 
+	/**
+	 * Returns the paint used for the alternate grid band of the section.
+	 *
+	 * @return The paint (never <code>null</code>).
+	 *
+	 * @see #setBaseGridBandAlternatePaint(Paint)
+	 * @see Section#setGridBandAlternatePaint(Paint)
+	 */
+	protected Paint getGridBandAlternatePaint(Section section) {
+		Args.nullNotPermitted(section, "section");
+		Paint paint = section.getGridBandAlternatePaint();
+		if (paint == null) {
+			paint = getBaseGridBandAlternatePaint();
+		}
+		return paint;
+	}
+
+	/**
+	 * Returns the absolute gap value to use between sections.
+	 * 
+	 * @return the absolute gap value to use between sections.
+	 * @see #setBaseSectionGap(double)
+	 */
+	public double getBaseSectionGap() {
+		return baseSectionGap;
+	}
+
+	/**
+	 * Sets the absolute gap value to use between sections.
+	 * 
+	 * @param sectionGap the absolute gap value to use between sections.
+	 */
+	public void setBaseSectionGap(double sectionGap) {
+		this.baseSectionGap = sectionGap;
+	}
+
+	/**
+	 * Returns an unmodifiable {@link List} containing all {@link Section}s that are
+	 * currently contained by this axis.
+	 * 
+	 * @return all {@link Section}s that are currently contained by this axis.
+	 * @see #nextSection(String, double, double)
+	 */
+	public List<Section> getSections() {
+		return Collections.unmodifiableList(sections);
+	}
+
+	/**
+	 * Creates and adds a new {@link Section} to this axis with the specified
+	 * <code>label</code>, {@link #DEFAULT_SECTION_LENGTH} and
+	 * {@link #getBaseSectionGap()}.
+	 * 
+	 * @param label the label for the section
+	 * @return the created section
+	 */
 	public Section nextSection(String label) {
-		return nextSection(label, DEFAULT_SECTION_LENGTH, sectionGap);
+		return nextSection(label, DEFAULT_SECTION_LENGTH, baseSectionGap);
 	}
 
+	/**
+	 * Creates and adds a new {@link Section} to this axis with the specified
+	 * <code>label, length</code> and {@link #getBaseSectionGap()}.
+	 * 
+	 * @param label  the label for the section
+	 * @param length the length of the section on this axis
+	 * @return the created section
+	 */
 	public Section nextSection(String label, double length) {
-		return nextSection(label, length, sectionGap);
+		return nextSection(label, length, baseSectionGap);
 	}
 
+	/**
+	 * Creates and adds a new {@link Section} to this axis with the specified
+	 * <code>label, length and gap</code>.
+	 * 
+	 * @param label  the label for the section
+	 * @param length the length of the section on this axis
+	 * @param gap    the gap between the section and the previous section on this
+	 *               axis
+	 * @return the created section
+	 */
 	public Section nextSection(String label, double length, double gap) {
-		if (length <= 0) {
-			throw new IllegalArgumentException("Section length should be greather than zero.");
-		}
-		if (gap < 0) {
-			throw new IllegalArgumentException("Section gap should be greather than or equal to zero.");
-		}
+		Args.requireGreaterThanZero(length, "length");
+		Args.requireNonNegative(gap, "gap");
 		double sectionLowerBound = 0;
 		if (!sections.isEmpty()) {
-			sectionLowerBound = sections.last().getUpperBound() + gap;
+			sectionLowerBound = sections.getLast().getRange().getUpperBound() + gap;
 		}
-		Section section = new Section(new Range(sectionLowerBound, sectionLowerBound + length), label);
+		Section section = new Section(this, new Range(sectionLowerBound, sectionLowerBound + length), label);
 		sections.add(section);
 		return section;
 	}
-
-	protected List<Section> getSectionsInRange() {
-		return sections.stream().filter(s -> getRange().intersects(s.getRange())).collect(Collectors.toList());
+	
+	/**
+	 * Receives notification of a section change.
+	 *
+	 * @param section the section.
+	 */
+	protected void sectionChanged(Section section) {
+		fireChangeEvent();
 	}
+
 
 	@Override
 	public double valueToJava2D(double value, Rectangle2D area, RectangleEdge edge) {
@@ -380,8 +468,8 @@ public class SectionsAxis extends ValueAxis {
 				lower = r.getLowerBound();
 				upper = r.getUpperBound();
 			} else {
-				lower = sections.first().getLowerBound();
-				upper = sections.last().getUpperBound();
+				lower = sections.getFirst().getRange().getLowerBound();
+				upper = sections.getLast().getRange().getUpperBound();
 			}
 
 			double fixedAutoRange = getFixedAutoRange();
@@ -425,13 +513,25 @@ public class SectionsAxis extends ValueAxis {
 			state = drawLabel(getLabel(), g2, plotArea, dataArea, edge, state);
 		}
 		createAndAddEntity(cursor, state, dataArea, edge, plotState);
-		createTickLabelEntities(g2, cursor, dataArea, edge, state, plotState);
+		createTickLabelEntities(g2, cursor, state, dataArea, edge, plotState);
 
 		return state;
 	}
 
-	protected void createTickLabelEntities(Graphics2D g2, double cursor, Rectangle2D dataArea, RectangleEdge edge,
-			AxisState state, PlotRenderingInfo plotState) {
+	/**
+	 * Creates the {@link TickLabelEntity}s for this axis.
+	 *
+	 * @param g2        the graphics device ({@code null} not permitted).
+	 * @param cursor    the initial cursor value.
+	 * @param state     the axis state after completion of the drawing with a
+	 *                  possibly updated cursor position.
+	 * @param dataArea  the data area.
+	 * @param edge      the edge ({@code null} not permitted).
+	 * @param plotState the PlotRenderingInfo from which a reference to the entity
+	 *                  collection can be obtained.
+	 */
+	protected void createTickLabelEntities(Graphics2D g2, double cursor, AxisState state, Rectangle2D dataArea,
+			RectangleEdge edge, PlotRenderingInfo plotState) {
 		if (plotState == null || plotState.getOwner() == null || plotState.getOwner().getEntityCollection() == null) {
 			return; // no need to create entity if we can't save it anyways...
 		}
@@ -513,23 +613,15 @@ public class SectionsAxis extends ValueAxis {
 			outlineStrokeWidth = ((BasicStroke) outlineStroke).getLineWidth();
 		}
 
-		for (Section section : getSectionsInRange()) {
+		for (Section section : sections) {
+			if (!getRange().intersects(section.getRange())) {
+				continue;
+			}
+
 			yMin = valueToJava2D(section.getRange().getLowerBound(), dataArea, RectangleEdge.LEFT);
 			yMax = valueToJava2D(section.getRange().getUpperBound(), dataArea, RectangleEdge.LEFT);
 
-			if (useAlternatePaint) {
-				if (null != section.getGridBandAlternatePaint()) {
-					g2.setPaint(section.getGridBandAlternatePaint());
-				} else {
-					g2.setPaint(this.gridBandAlternatePaint);
-				}
-			} else {
-				if (null != section.getGridBandPaint()) {
-					g2.setPaint(section.getGridBandPaint());
-				} else {
-					g2.setPaint(this.gridBandPaint);
-				}
-			}
+			g2.setPaint(useAlternatePaint ? getGridBandAlternatePaint(section) : getGridBandPaint(section));
 			useAlternatePaint = !useAlternatePaint;
 
 			Rectangle2D band = new Rectangle2D.Double(xx + outlineStrokeWidth, Math.min(yMin, yMax),
@@ -537,7 +629,7 @@ public class SectionsAxis extends ValueAxis {
 			g2.fill(band);
 		}
 	}
-
+	
 	@Override
 	public List<ValueTick> refreshTicks(Graphics2D g2, AxisState state, Rectangle2D dataArea, RectangleEdge edge) {
 		if (RectangleEdge.isTopOrBottom(edge)) {
@@ -549,13 +641,25 @@ public class SectionsAxis extends ValueAxis {
 		}
 	}
 
+	/**
+	 * Calculates the positions of the tick labels for the axis, storing the results
+	 * in the tick label list (ready for drawing). This method is called when the
+	 * axis is at the top or bottom of the chart (so the axis is "horizontal").
+	 *
+	 * @param g2       the graphics device.
+	 * @param dataArea the area in which the plot should be drawn.
+	 * @param edge     the location of the axis.
+	 *
+	 * @return The ticks.
+	 */
 	protected List<ValueTick> refreshTicksHorizontal(Graphics2D g2, Rectangle2D dataArea, RectangleEdge edge) {
 		throw new UnsupportedOperationException("This axis does not support horizontal plotting yet!");
 	}
 
 	/**
 	 * Calculates the positions of the tick labels for the axis, storing the results
-	 * in the tick label list (ready for drawing).
+	 * in the tick label list (ready for drawing). This method is called when the
+	 * axis is at the left or right of the chart (so the axis is "vertical").
 	 *
 	 * @param g2       the graphics device.
 	 * @param dataArea the area in which the plot should be drawn.
@@ -597,74 +701,78 @@ public class SectionsAxis extends ValueAxis {
 		List<ValueTick> ticks = new ArrayList<>();
 		Area ticksTextArea = new Area();
 
-		sections.stream().filter(s -> getRange().contains(s.getRange().getCentralValue())).forEach(s -> {
-			String sectionLabel = s.getLabel();
-			String tickLabel = createTickLabel(sectionLabel);
-			SectionTick sectionTick = new SectionTick(TickType.MINOR, s.getRange().getCentralValue(), tickLabel,
-					textAnchor, rotationAnchor, angle);
-			switch (getTooltipMode()) {
-			case MAX_EXCEEDED:
-				if (Objects.equals(sectionLabel, tickLabel)) {
-					// No need to add tooltip
-					break;
-				}
-			case ALWAYS:
-				sectionTick.setTooltipText(sectionLabel);
-				break;
-			default:
-				// Nothing to do
-				break;
+		for (Section section : sections) {
+			if (!getRange().contains(section.getRange().getCentralValue())) {
+				continue;
 			}
-
+			SectionTick sectionTick = createSectionTick(TickType.MINOR, section.getRange().getCentralValue(),
+					section.getLabel(), textAnchor, rotationAnchor, angle);
 			// Avoid to draw overlapping ticks labels
 			Shape tickTextBounds = calculateTickTextBounds(sectionTick, g2, cursor, dataArea, edge);
 			if (!intersect(ticksTextArea, tickTextBounds)) {
 				ticksTextArea.add(new Area(tickTextBounds));
 				ticks.add(sectionTick);
 			}
-		});
+		}
 
-		sections.stream().filter(s -> s.axis != null).forEach(s -> {
-			Range sectionRange = s.getRange();
+		for (Section section : sections) {
+			ValueAxis gridBandAxis = section.getGridBandAxis();
+			if (null == gridBandAxis) {
+				continue;
+			}
+
+			Range gridBandRange = gridBandAxis.getRange();
+			Range sectionRange = section.getRange();
 			double yLower = valueToJava2D(sectionRange.getLowerBound(), dataArea, edge);
 			double yUpper = valueToJava2D(sectionRange.getUpperBound(), dataArea, edge);
 			// Calculate ticks for the scaled data area
 			Rectangle2D sectionDataArea = new Rectangle2D.Double(dataArea.getX(), yLower, dataArea.getWidth(),
 					Math.abs(yUpper - yLower));
 
-			List<?> sectionTicks = s.axis.refreshTicks(g2, new AxisState(cursor), sectionDataArea, edge);
+			List<?> sectionTicks = gridBandAxis.refreshTicks(g2, new AxisState(cursor), sectionDataArea, edge);
 			for (Object tick : sectionTicks) {
-				if (NumberTick.class.equals(tick.getClass())) {
-					NumberTick nt = (NumberTick) tick;
-					// Scale the ticks back to the original data area
-					double scaledValue = AxisUtils.scaleValue(nt.getValue(), s.axis.getRange(), sectionRange);
-					NumberTick scaledTick = new NumberTick(nt.getTickType(), scaledValue, nt.getText(),
-							nt.getTextAnchor(), nt.getRotationAnchor(), nt.getAngle());
+				ValueTick sectionTick = (ValueTick) tick;
+				// Scale the ticks back to the original data area
+				double scaledValue = AxisUtils.scaleValue(sectionTick.getValue(), gridBandRange, sectionRange);
+				SectionTick scaledTick = createSectionTick(sectionTick.getTickType(), scaledValue,
+						sectionTick.getText(), sectionTick.getTextAnchor(), sectionTick.getRotationAnchor(),
+						sectionTick.getAngle());
 
-					// Avoid to draw overlapping ticks labels
-					Shape tickTextBounds = calculateTickTextBounds(scaledTick, g2, cursor, dataArea, edge);
-					if (intersect(ticksTextArea, tickTextBounds)) {
-						// Just add the tick, but without label
-						ticks.add(new NumberTick(nt.getTickType(), scaledValue, null, nt.getTextAnchor(),
-								nt.getRotationAnchor(), nt.getAngle()));
-					} else {
-						ticksTextArea.add(new Area(tickTextBounds));
-						ticks.add(scaledTick);
-					}
+				// Avoid to draw overlapping ticks labels
+				Shape tickTextBounds = calculateTickTextBounds(scaledTick, g2, cursor, dataArea, edge);
+				if (intersect(ticksTextArea, tickTextBounds)) {
+					// Just add the tick, but without label
+					ticks.add(createSectionTick(sectionTick.getTickType(), scaledValue, null,
+							sectionTick.getTextAnchor(), sectionTick.getRotationAnchor(), sectionTick.getAngle()));
 				} else {
-					System.err.println("Tick type not supported for section axis: " + tick);
+					ticksTextArea.add(new Area(tickTextBounds));
+					ticks.add(scaledTick);
 				}
-				continue;
 			}
-		});
+		}
 		return ticks;
 	}
-
-	private boolean intersect(Shape a, Shape b) {
-		final Area areaA = new Area(a);
-		final Area areaB = new Area(b);
-		areaA.intersect(areaB);
-		return !areaA.isEmpty();
+	
+	private SectionTick createSectionTick(TickType tickType, double value, String label, TextAnchor textAnchor,
+			TextAnchor rotationAnchor, double angle) {
+		final String tickLabel = createTickLabel(label);
+		final SectionTick sectionTick = new SectionTick(tickType, value, tickLabel, textAnchor, rotationAnchor, angle);
+		
+		switch (getTooltipMode()) {
+			case MAX_EXCEEDED:
+				if (Objects.equals(label, tickLabel)) {
+					// No need to add tooltip
+					break;
+				}
+			case ALWAYS:
+				sectionTick.setTooltipText(label);
+				break;
+			default:
+				// Nothing to do
+				break;
+		}
+		
+		return sectionTick;
 	}
 
 	private Shape calculateTickTextBounds(ValueTick tick, Graphics2D g2, double cursor, Rectangle2D dataArea,
@@ -682,121 +790,10 @@ public class SectionsAxis extends ValueAxis {
 				tick.getTextAnchor(), tick.getAngle(), tick.getRotationAnchor());
 	}
 
-	@Override
-	protected void fireChangeEvent() {
-		// Avoiding accessibility exceptions
-		super.fireChangeEvent();
-	}
-
-	public class Section implements Comparable<Section>, Serializable, AxisChangeListener {
-		private static final long serialVersionUID = 1028149280898345210L;
-
-		private final Range range;
-
-		private String label;
-		private ValueAxis axis;
-		/** The paint used to color the grid bands (if the bands are visible). */
-		private transient Paint gridBandPaint;
-		/** The paint used to fill the alternate grid bands. */
-		private transient Paint gridBandAlternatePaint;
-
-		protected Section(Range range, String label) {
-			this.range = range;
-			this.label = label;
-		}
-
-		public Range getRange() {
-			return range;
-		}
-
-		/** @see #getRange() */
-		public double getLowerBound() {
-			return range.getLowerBound();
-		}
-
-		/** @see #getRange() */
-		public double getUpperBound() {
-			return range.getUpperBound();
-		}
-
-		public String getLabel() {
-			return label;
-		}
-
-		public void setLabel(String label) {
-			this.label = label;
-			fireChangeEvent();
-		}
-
-		public Paint getGridBandPaint() {
-			return gridBandPaint;
-		}
-
-		public void setGridBandPaint(Paint paint) {
-			this.gridBandPaint = paint;
-			fireChangeEvent();
-		}
-
-		public void setGridBandAlternatePaint(Paint paint) {
-			this.gridBandAlternatePaint = paint;
-			fireChangeEvent();
-		}
-
-		public Paint getGridBandAlternatePaint() {
-			return null == gridBandAlternatePaint ? gridBandPaint : gridBandAlternatePaint;
-		}
-
-		public Range getGridBandRange() {
-			return axis.getRange();
-		}
-
-		public void setGridBandNumberRange(Range gridBandRange, boolean isInteger) {
-			NumberAxis gridBandAxis = new NumberAxis(this.label);
-			if (isInteger) {
-				gridBandAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-			}
-			gridBandAxis.setMinorTickCount(1);
-			setGridBandAxis(gridBandRange, gridBandAxis);
-		}
-
-		protected void setGridBandAxis(Range gridBandRange, ValueAxis gridBandAxis) {
-			if (null != this.axis) {
-				this.axis.removeChangeListener(Section.this);
-			}
-			this.axis = gridBandAxis;
-			if (null != this.axis) {
-				this.axis.addChangeListener(this);
-				this.axis.setRange(gridBandRange, true, true);
-			}
-		}
-
-		@Override
-		public void axisChanged(AxisChangeEvent event) {
-			fireChangeEvent();
-		}
-
-		@Override
-		public int compareTo(Section o) {
-			return Double.compare(range.getCentralValue(), o.range.getCentralValue());
-		}
-	}
-
-	protected static class SectionTick extends ValueTick {
-		private static final long serialVersionUID = 4133486505758570577L;
-
-		private String tooltipText;
-
-		public SectionTick(TickType tickType, double value, String label, TextAnchor textAnchor,
-				TextAnchor rotationAnchor, double angle) {
-			super(tickType, value, label, textAnchor, rotationAnchor, angle);
-		}
-
-		public void setTooltipText(String tooltipText) {
-			this.tooltipText = tooltipText;
-		}
-
-		public String getTooltipText() {
-			return tooltipText;
-		}
+	private boolean intersect(Shape a, Shape b) {
+		final Area areaA = new Area(a);
+		final Area areaB = new Area(b);
+		areaA.intersect(areaB);
+		return !areaA.isEmpty();
 	}
 }
