@@ -41,65 +41,140 @@ import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.util.stream.Collectors;
 
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.Range;
 
+/**
+ * Axis utilities.
+ */
 public final class AxisUtils {
 	public static final FontRenderContext DEFAULT_FONT_RENDER_CONTEXT = new FontRenderContext(null, true, false);
 
+	/**
+	 * Private constructor prevents object creation.
+	 */
 	private AxisUtils() {
 		// Empty
 	}
 
+	/**
+	 * Estimates the required dimension of a {@link SymbolAxis}, based on its
+	 * {@link SymbolAxis#getSymbols()} and applies it to the axis. Uses the
+	 * {@link #DEFAULT_FONT_RENDER_CONTEXT} to estimate.
+	 * 
+	 * @param axis the axis to apply the fixed dimension
+	 * @param edge the edge of the {@code axis} on the plot, see
+	 *             {@link XYPlot#getDomainAxisEdge(int)} or
+	 *             {@link XYPlot#getRangeAxisEdge(int)}
+	 * @see ValueAxis#setFixedDimension(double)
+	 */
 	public static void calculateAndApplyFixedDimension(SymbolAxis axis, RectangleEdge edge) {
 		calculateAndApplyFixedDimension(axis, edge, DEFAULT_FONT_RENDER_CONTEXT);
 	}
-	
+
+	/**
+	 * Estimates the required dimension of a {@link SymbolAxis}, based on its
+	 * {@link SymbolAxis#getSymbols()} and applies it to the axis. Uses the
+	 * {@code frc} to estimate.
+	 * 
+	 * @param axis the axis to apply the fixed dimension
+	 * @param edge the edge of the {@code axis} on the plot, see
+	 *             {@link XYPlot#getDomainAxisEdge(int)} or
+	 *             {@link XYPlot#getRangeAxisEdge(int)}
+	 * @param frc  the font render context to use for the estimation
+	 * @see ValueAxis#setFixedDimension(double)
+	 */
 	public static void calculateAndApplyFixedDimension(SymbolAxis axis, RectangleEdge edge, FontRenderContext frc) {
 		double fixedDimension = 0;
 		for (String symbol : axis.getSymbols()) {
-			if (null == symbol) continue;
+			if (null == symbol)
+				continue;
 			Rectangle2D symbolBounds = axis.getTickLabelFont().getStringBounds(symbol, frc);
-			fixedDimension = Math.max(fixedDimension, RectangleEdge.isLeftOrRight(edge) ? symbolBounds.getWidth() : symbolBounds.getHeight());
+			fixedDimension = Math.max(fixedDimension,
+					RectangleEdge.isLeftOrRight(edge) ? symbolBounds.getWidth() : symbolBounds.getHeight());
 		}
 		if (null != axis.getLabel()) {
-			Rectangle2D labelBounds = axis.getLabelInsets().createOutsetRectangle(axis.getLabelFont().getStringBounds(axis.getLabel(), frc));
-			fixedDimension += RectangleEdge.isLeftOrRight(edge) ? labelBounds.getHeight() : labelBounds.getWidth();
-		}
-		axis.setFixedDimension(fixedDimension);
-	}
-	
-	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge) {
-		calculateAndApplyFixedDimension(axis, edge, DEFAULT_FONT_RENDER_CONTEXT);
-	}
-	
-	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge, FontRenderContext frc) {
-		double fixedDimension = 0;
-		for (String sectionLabel : axis.getSections().stream().map(Section::getLabel).collect(Collectors.toList())) {
-			if (null == sectionLabel) continue;
-			String tickLabel = axis.createTickLabel(sectionLabel);
-			Rectangle2D symbolBounds = axis.getTickLabelFont().getStringBounds(tickLabel, frc);
-			symbolBounds = axis.getTickLabelInsets().createOutsetRectangle(symbolBounds);
-			fixedDimension = Math.max(fixedDimension, RectangleEdge.isLeftOrRight(edge) ? symbolBounds.getWidth() : symbolBounds.getHeight());
-		}
-		if (null != axis.getLabel()) {
-			Rectangle2D labelBounds = axis.getLabelInsets().createOutsetRectangle(axis.getLabelFont().getStringBounds(axis.getLabel(), frc));
+			Rectangle2D labelBounds = axis.getLabelInsets()
+					.createOutsetRectangle(axis.getLabelFont().getStringBounds(axis.getLabel(), frc));
 			fixedDimension += RectangleEdge.isLeftOrRight(edge) ? labelBounds.getHeight() : labelBounds.getWidth();
 		}
 		axis.setFixedDimension(fixedDimension);
 	}
 
 	/**
-     * Calculates the number of visible ticks.
-     *
-     * @return The number of visible ticks on the axis.
-     */
-    public static int calculateVisibleTickCount(TickUnit unit, Range range) {
-        return (int) (Math.floor(range.getUpperBound() / unit.getSize())
-                      - Math.ceil(range.getLowerBound() / unit.getSize()) + 1);
-    }
-	
+	 * Estimates the required dimension of a {@link SectionAxis}, based on its
+	 * section labels and applies it to the axis. Uses the
+	 * {@link #DEFAULT_FONT_RENDER_CONTEXT} to estimate.
+	 * 
+	 * @param axis the axis to apply the fixed dimension
+	 * @param edge the edge of the {@code axis} on the plot, see
+	 *             {@link XYPlot#getDomainAxisEdge(int)} or
+	 *             {@link XYPlot#getRangeAxisEdge(int)}
+	 * @see Section#getLabel()
+	 * @see ValueAxis#setFixedDimension(double)
+	 */
+	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge) {
+		calculateAndApplyFixedDimension(axis, edge, DEFAULT_FONT_RENDER_CONTEXT);
+	}
+
+	/**
+	 * Estimates the required dimension of a {@link SectionAxis}, based on its
+	 * section labels and applies it to the axis. Uses the {@code frc} to estimate.
+	 * 
+	 * @param axis the axis to apply the fixed dimension
+	 * @param edge the edge of the {@code axis} on the plot, see
+	 *             {@link XYPlot#getDomainAxisEdge(int)} or
+	 *             {@link XYPlot#getRangeAxisEdge(int)}
+	 * @param frc  the font render context to use for the estimation
+	 * @see Section#getLabel()
+	 * @see ValueAxis#setFixedDimension(double)
+	 */
+	public static void calculateAndApplyFixedDimension(SectionAxis axis, RectangleEdge edge, FontRenderContext frc) {
+		double fixedDimension = 0;
+		for (String sectionLabel : axis.getSections().stream().map(Section::getLabel).collect(Collectors.toList())) {
+			if (null == sectionLabel)
+				continue;
+			String tickLabel = axis.createTickLabel(sectionLabel);
+			Rectangle2D symbolBounds = axis.getTickLabelFont().getStringBounds(tickLabel, frc);
+			symbolBounds = axis.getTickLabelInsets().createOutsetRectangle(symbolBounds);
+			fixedDimension = Math.max(fixedDimension,
+					RectangleEdge.isLeftOrRight(edge) ? symbolBounds.getWidth() : symbolBounds.getHeight());
+		}
+		if (null != axis.getLabel()) {
+			Rectangle2D labelBounds = axis.getLabelInsets()
+					.createOutsetRectangle(axis.getLabelFont().getStringBounds(axis.getLabel(), frc));
+			fixedDimension += RectangleEdge.isLeftOrRight(edge) ? labelBounds.getHeight() : labelBounds.getWidth();
+		}
+		axis.setFixedDimension(fixedDimension);
+	}
+
+	/**
+	 * Calculates the number of visible ticks.
+	 *
+	 * @return The number of visible ticks on the axis.
+	 */
+	public static int calculateVisibleTickCount(TickUnit unit, Range range) {
+		return (int) (Math.floor(range.getUpperBound() / unit.getSize())
+				- Math.ceil(range.getLowerBound() / unit.getSize()) + 1);
+	}
+
+	/**
+	 * Linear scale of a {@code value} within a {@code source} range to the
+	 * corresponding value in the {@code target} range.
+	 * 
+	 * @param value  the value to scale
+	 * @param source The range containing {@code value}
+	 * @param target The range for which the {@code return} value is calculated.
+	 * @return the scaled value
+	 * @throws IllegalArgumentException if {@code value} is not contained by
+	 *                                  {@code source}, see
+	 *                                  {@link Range#contains(double)}
+	 */
 	public static double scaleValue(double value, Range source, Range target) {
-		return (((value - source.getLowerBound()) / source.getLength()) * target.getLength()) + target.getLowerBound();  
+		if (!source.contains(value)) {
+			throw new IllegalArgumentException("Value should lie within source range");
+		}
+		return (((value - source.getLowerBound()) / source.getLength()) * target.getLength()) + target.getLowerBound();
 	}
 }
