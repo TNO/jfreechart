@@ -140,7 +140,7 @@ public class Section implements Comparable<Section>, Serializable, AxisChangeLis
 	 * Sets the paint for the section grid band.
 	 * 
 	 * @param paint the section grid band paint ({@code null} permitted)
-	 * @see SectionAxis#setBaseGridBandPaint(Paint)
+	 * @see SectionAxis#setDefaultGridBandPaint(Paint)
 	 */
 	public void setGridBandPaint(Paint paint) {
 		this.gridBandPaint = paint;
@@ -162,7 +162,7 @@ public class Section implements Comparable<Section>, Serializable, AxisChangeLis
 	 * Sets the alternate paint for the section grid band.
 	 * 
 	 * @param paint the section grid band alternate paint ({@code null} permitted)
-	 * @see SectionAxis#setBaseGridBandAlternatePaint(Paint)
+	 * @see SectionAxis#setDefaultGridBandAlternatePaint(Paint)
 	 */
 	public void setGridBandAlternatePaint(Paint paint) {
 		this.gridBandAlternatePaint = paint;

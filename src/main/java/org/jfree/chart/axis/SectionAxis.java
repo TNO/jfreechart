@@ -107,7 +107,7 @@ public class SectionAxis extends ValueAxis {
 
 	private final LinkedList<Section> sections = new LinkedList<>();
 
-	private double baseSectionGap;
+	private double defaultSectionGap;
 
 	private int tickLabelMaxLength;
 
@@ -117,10 +117,10 @@ public class SectionAxis extends ValueAxis {
 	private boolean gridBandsVisible;
 
 	/** The paint used to color the grid bands (if the bands are visible). */
-	private transient Paint baseGridBandPaint;
+	private transient Paint defaultGridBandPaint;
 
 	/** The paint used to fill the alternate grid bands. */
-	private transient Paint baseGridBandAlternatePaint;
+	private transient Paint defaultGridBandAlternatePaint;
 
 	/**
 	 * Default constructor.
@@ -139,9 +139,9 @@ public class SectionAxis extends ValueAxis {
 		setLowerMargin(DEFAULT_LOWER_MARGIN);
 		setUpperMargin(DEFAULT_UPPER_MARGIN);
 		this.gridBandsVisible = true;
-		this.baseGridBandPaint = DEFAULT_GRID_BAND_PAINT;
-		this.baseGridBandAlternatePaint = DEFAULT_GRID_BAND_ALTERNATE_PAINT;
-		this.baseSectionGap = DEFAULT_SECTION_GAP;
+		this.defaultGridBandPaint = DEFAULT_GRID_BAND_PAINT;
+		this.defaultGridBandAlternatePaint = DEFAULT_GRID_BAND_ALTERNATE_PAINT;
+		this.defaultSectionGap = DEFAULT_SECTION_GAP;
 		this.tickLabelMaxLength = NO_TICK_LABEL_MAX_LENGTH;
 		this.tooltipMode = TooltipMode.MAX_EXCEEDED;
 	}
@@ -237,11 +237,11 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @return The grid band paint (never <code>null</code>).
 	 *
-	 * @see #setBaseGridBandPaint(Paint)
+	 * @see #setDefaultGridBandPaint(Paint)
 	 * @see #isGridBandsVisible()
 	 */
-	public Paint getBaseGridBandPaint() {
-		return this.baseGridBandPaint;
+	public Paint getDefaultGridBandPaint() {
+		return this.defaultGridBandPaint;
 	}
 
 	/**
@@ -250,11 +250,11 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @param paint the paint (<code>null</code> not permitted).
 	 *
-	 * @see #getBaseGridBandPaint()
+	 * @see #getDefaultGridBandPaint()
 	 */
-	public void setBaseGridBandPaint(Paint paint) {
+	public void setDefaultGridBandPaint(Paint paint) {
 		Args.nullNotPermitted(paint, "paint");
-		this.baseGridBandPaint = paint;
+		this.defaultGridBandPaint = paint;
 		fireChangeEvent();
 	}
 	
@@ -263,14 +263,14 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @return The paint (never <code>null</code>).
 	 *
-	 * @see #setBaseGridBandPaint(Paint)
+	 * @see #setDefaultGridBandPaint(Paint)
 	 * @see Section#setGridBandPaint(Paint)
 	 */
 	protected Paint getGridBandPaint(Section section) {
 		Args.nullNotPermitted(section, "section");
 		Paint paint = section.getGridBandPaint();
 		if (paint == null) {
-			paint = getBaseGridBandPaint();
+			paint = getDefaultGridBandPaint();
 		}
 		return paint;
 	}
@@ -280,11 +280,11 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @return The paint (never <code>null</code>).
 	 *
-	 * @see #setBaseGridBandAlternatePaint(Paint)
+	 * @see #setDefaultGridBandAlternatePaint(Paint)
 	 * @see #isGridBandsVisible()
 	 */
-	public Paint getBaseGridBandAlternatePaint() {
-		return this.baseGridBandAlternatePaint;
+	public Paint getDefaultGridBandAlternatePaint() {
+		return this.defaultGridBandAlternatePaint;
 	}
 
 	/**
@@ -293,12 +293,12 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @param paint the paint (<code>null</code> not permitted).
 	 *
-	 * @see #getBaseGridBandAlternatePaint()
-	 * @see #setBaseGridBandPaint(Paint)
+	 * @see #getDefaultGridBandAlternatePaint()
+	 * @see #setDefaultGridBandPaint(Paint)
 	 */
-	public void setBaseGridBandAlternatePaint(Paint paint) {
+	public void setDefaultGridBandAlternatePaint(Paint paint) {
 		Args.nullNotPermitted(paint, "paint");
-		this.baseGridBandAlternatePaint = paint;
+		this.defaultGridBandAlternatePaint = paint;
 		fireChangeEvent();
 	}
 
@@ -307,14 +307,14 @@ public class SectionAxis extends ValueAxis {
 	 *
 	 * @return The paint (never <code>null</code>).
 	 *
-	 * @see #setBaseGridBandAlternatePaint(Paint)
+	 * @see #setDefaultGridBandAlternatePaint(Paint)
 	 * @see Section#setGridBandAlternatePaint(Paint)
 	 */
 	protected Paint getGridBandAlternatePaint(Section section) {
 		Args.nullNotPermitted(section, "section");
 		Paint paint = section.getGridBandAlternatePaint();
 		if (paint == null) {
-			paint = getBaseGridBandAlternatePaint();
+			paint = getDefaultGridBandAlternatePaint();
 		}
 		return paint;
 	}
@@ -323,10 +323,10 @@ public class SectionAxis extends ValueAxis {
 	 * Returns the absolute gap value to use between sections.
 	 * 
 	 * @return the absolute gap value to use between sections.
-	 * @see #setBaseSectionGap(double)
+	 * @see #setDefaultSectionGap(double)
 	 */
-	public double getBaseSectionGap() {
-		return baseSectionGap;
+	public double getDefaultSectionGap() {
+		return defaultSectionGap;
 	}
 
 	/**
@@ -334,8 +334,8 @@ public class SectionAxis extends ValueAxis {
 	 * 
 	 * @param sectionGap the absolute gap value to use between sections.
 	 */
-	public void setBaseSectionGap(double sectionGap) {
-		this.baseSectionGap = sectionGap;
+	public void setDefaultSectionGap(double sectionGap) {
+		this.defaultSectionGap = sectionGap;
 	}
 
 	/**
@@ -352,25 +352,25 @@ public class SectionAxis extends ValueAxis {
 	/**
 	 * Creates and adds a new {@link Section} to this axis with the specified
 	 * <code>label</code>, {@link #DEFAULT_SECTION_LENGTH} and
-	 * {@link #getBaseSectionGap()}.
+	 * {@link #getDefaultSectionGap()}.
 	 * 
 	 * @param label the label for the section
 	 * @return the created section
 	 */
 	public Section nextSection(String label) {
-		return nextSection(label, DEFAULT_SECTION_LENGTH, baseSectionGap);
+		return nextSection(label, DEFAULT_SECTION_LENGTH, defaultSectionGap);
 	}
 
 	/**
 	 * Creates and adds a new {@link Section} to this axis with the specified
-	 * <code>label, length</code> and {@link #getBaseSectionGap()}.
+	 * <code>label, length</code> and {@link #getDefaultSectionGap()}.
 	 * 
 	 * @param label  the label for the section
 	 * @param length the length of the section on this axis
 	 * @return the created section
 	 */
 	public Section nextSection(String label, double length) {
-		return nextSection(label, length, baseSectionGap);
+		return nextSection(label, length, defaultSectionGap);
 	}
 
 	/**
