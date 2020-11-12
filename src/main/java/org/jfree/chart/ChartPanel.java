@@ -79,6 +79,11 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
+import java.beans.VetoableChangeSupport;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -171,6 +176,8 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     /** Properties action command. */
     public static final String PROPERTIES_COMMAND = "PROPERTIES";
 
+    public static final String PROPERTY_CHART = "Chart";
+    
     /**
      * Copy action command.
      *
@@ -222,6 +229,12 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
     /** Zoom reset (range axis only) action command. */
     public static final String ZOOM_RESET_RANGE_COMMAND = "ZOOM_RESET_RANGE";
+
+    /** Object to support property change notification. */
+    private PropertyChangeSupport propertyChangeSupport;
+
+    /** Object to support property change notification. */
+    private VetoableChangeSupport vetoableChangeSupport;
 
     /** The chart that is displayed in the panel. */
     protected JFreeChart chart;
@@ -563,6 +576,8 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
            boolean copy, boolean save, boolean print, boolean zoom,
            boolean tooltips) {
 
+        this.propertyChangeSupport = new PropertyChangeSupport(this);
+        this.vetoableChangeSupport = new VetoableChangeSupport(this);
         setChart(chart);
         this.chartMouseListeners = new EventListenerList();
         this.info = new ChartRenderingInfo();
@@ -621,43 +636,54 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         return this.chart;
     }
 
-    /**
-     * Sets the chart that is displayed in the panel.
-     *
-     * @param chart  the chart ({@code null} permitted).
-     */
+	/**
+	 * Sets the chart that is displayed in the panel.
+	 *
+	 * @param chart the chart ({@code null} permitted).
+	 * @throws IllegalArgumentException if setting the {@code chart} is vetoed by
+	 *                                  one of the registered
+	 *                                  {@link VetoableChangeListener}s
+	 * @see #PROPERTY_CHART
+	 * @see #addVetoableChangeListener(VetoableChangeListener)
+	 */
     public void setChart(JFreeChart chart) {
-
-        // stop listening for changes to the existing chart
-        if (this.chart != null) {
-            this.chart.removeChangeListener(this);
-            this.chart.removeProgressListener(this);
-        }
-
-        // add the new chart
-        this.chart = chart;
-        if (chart != null) {
-            this.chart.addChangeListener(this);
-            this.chart.addProgressListener(this);
-            Plot plot = chart.getPlot();
-            this.domainZoomable = false;
-            this.rangeZoomable = false;
-            if (plot instanceof Zoomable) {
-                Zoomable z = (Zoomable) plot;
-                this.domainZoomable = z.isDomainZoomable();
-                this.rangeZoomable = z.isRangeZoomable();
-                this.orientation = z.getOrientation();
-            }
-        }
-        else {
-            this.domainZoomable = false;
-            this.rangeZoomable = false;
-        }
-        if (this.useBuffer) {
-            this.refreshBuffer = true;
-        }
-        repaint();
-
+    	try {
+    		JFreeChart oldChart = this.chart;
+    		fireVetoableChange(PROPERTY_CHART, oldChart, chart);
+    		
+	        // stop listening for changes to the existing chart
+	        if (this.chart != null) {
+	            this.chart.removeChangeListener(this);
+	            this.chart.removeProgressListener(this);
+	        }
+	
+	        // add the new chart
+	        this.chart = chart;
+	        if (chart != null) {
+	            this.chart.addChangeListener(this);
+	            this.chart.addProgressListener(this);
+	            Plot plot = chart.getPlot();
+	            this.domainZoomable = false;
+	            this.rangeZoomable = false;
+	            if (plot instanceof Zoomable) {
+	                Zoomable z = (Zoomable) plot;
+	                this.domainZoomable = z.isDomainZoomable();
+	                this.rangeZoomable = z.isRangeZoomable();
+	                this.orientation = z.getOrientation();
+	            }
+	        }
+	        else {
+	            this.domainZoomable = false;
+	            this.rangeZoomable = false;
+	        }
+	        if (this.useBuffer) {
+	            this.refreshBuffer = true;
+	        }
+            firePropertyChange(PROPERTY_CHART, oldChart, chart);
+	        repaint();
+    	} catch (PropertyVetoException e) {
+			throw new IllegalArgumentException(e.getMessage(), e);
+		}
     }
 
     /**
@@ -3043,6 +3069,78 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             SwingUtilities.updateComponentTreeUI(this.popup);
         }
         super.updateUI();
+    }
+
+    /**
+     * Adds a property change listener to the chart panel.
+     *
+     * @param listener  the listener.
+     * 
+     * @since 1.6.0 
+     */
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        this.propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+    /**
+     * Removes a property change listener from the chart panel.
+     *
+     * @param listener  the listener.
+     * 
+     * @since 1.6.0 
+     */
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        this.propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+
+    /**
+     * Fires a property change event.
+     *
+     * @param property  the property key.
+     * @param oldValue  the old value.
+     * @param newValue  the new value.
+     */
+    protected void firePropertyChange(String property, Object oldValue,
+            Object newValue) {
+        this.propertyChangeSupport.firePropertyChange(property, oldValue,
+                newValue);
+    }
+
+    /**
+     * Adds a vetoable property change listener to the chart panel.
+     *
+     * @param listener  the listener.
+     * 
+     * @since 1.6.0 
+     */
+    public void addVetoableChangeListener(VetoableChangeListener listener) {
+        this.vetoableChangeSupport.addVetoableChangeListener(listener);
+    }
+
+    /**
+     * Removes a vetoable property change listener from the chart panel.
+     *
+     * @param listener  the listener.
+     * 
+     * @since 1.6.0 
+     */
+    public void removeVetoableChangeListener(VetoableChangeListener listener) {
+        this.vetoableChangeSupport.removeVetoableChangeListener(listener);
+    }    
+
+    /**
+     * Fires a vetoable property change event.
+     *
+     * @param property  the property key.
+     * @param oldValue  the old value.
+     * @param newValue  the new value.
+     * 
+     * @throws PropertyVetoException if the change was vetoed.
+     */
+    protected void fireVetoableChange(String property, Object oldValue,
+            Object newValue) throws PropertyVetoException {
+        this.vetoableChangeSupport.fireVetoableChange(property, oldValue,
+                newValue);
     }
 
     /**
