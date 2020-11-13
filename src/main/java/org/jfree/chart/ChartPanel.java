@@ -93,6 +93,7 @@ import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
@@ -269,6 +270,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
     /** The popup menu for the frame. */
     protected JPopupMenu popup;
+    
+    /** The mask/predicate to show popup menus */
+    protected Predicate<MouseEvent> popupPredicate = MouseEvent::isPopupTrigger;
 
     /** The drawing info collected the last time the chart was drawn. */
     protected ChartRenderingInfo info;
@@ -408,11 +412,24 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     protected Point panLast;
 
     /**
-     * The mask for mouse events to trigger panning.
-     *
-     * @since 1.0.13
+     * The mask/predicate for mouse events to trigger panning.
      */
-    protected int panMask = InputEvent.CTRL_MASK;
+    protected Predicate<MouseEvent> panPredicate = InputEvent::isControlDown;
+
+	/**
+	 * The factor used to pan on an axis or domain range.
+	 */
+    protected double defaultPanFactor = 0.5;
+
+    /**
+     * The mask/predicate for mouse events to trigger domain zoom.
+     */
+    protected Predicate<MouseEvent> zoomDomainPredicate = e -> false;
+
+    /**
+     * The mask/predicate for mouse events to trigger range zoom.
+     */
+    protected Predicate<MouseEvent> zoomRangePredicate = e -> false;
 
     /**
      * A list of overlays for the panel.
@@ -601,12 +618,11 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         this.zoomOutlinePaint = Color.BLUE;
         this.zoomFillPaint = new Color(0, 0, 255, 63);
 
-        this.panMask = InputEvent.CTRL_MASK;
         // for MacOSX we can't use the CTRL key for mouse drags, see:
         // http://developer.apple.com/qa/qa2004/qa1362.html
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.startsWith("mac os x")) {
-            this.panMask = InputEvent.ALT_MASK;
+            this.panPredicate = InputEvent::isAltDown;
         }
 
         this.overlays = new ArrayList<>();
@@ -816,6 +832,16 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     public void setPopupMenu(JPopupMenu popup) {
         this.popup = popup;
     }
+    
+	/**
+	 * Sets the mask/predicate to match before showing a popup menu.
+	 * 
+	 * @param popupPredicate the mask/predicate to match before showing a popup
+	 *                       menu.
+	 */
+	public void setPopupPredicate(Predicate<MouseEvent> popupPredicate) {
+		this.popupPredicate = popupPredicate;
+	}
 
     /**
      * Returns the chart rendering info from the most recent chart redraw.
@@ -1605,8 +1631,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             return;
         }
         Plot plot = this.chart.getPlot();
-        int mods = e.getModifiers();
-        if ((mods & this.panMask) == this.panMask) {
+        if (this.panPredicate.test(e)) {
             // can we pan this plot?
             if (plot instanceof Pannable) {
                 Pannable pannable = (Pannable) plot;
@@ -1620,6 +1645,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                         this.panLast = e.getPoint();
                         setCursor(Cursor.getPredefinedCursor(
                                 Cursor.MOVE_CURSOR));
+                    	e.consume();
                     }
                 }
                 // the actual panning occurs later in the mouseDragged() 
@@ -1635,10 +1661,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             else {
                 this.zoomPoint = null;
             }
-            if (e.isPopupTrigger()) {
-                if (this.popup != null) {
-                    displayPopupMenu(e.getX(), e.getY());
-                }
+            if (this.popupPredicate.test(e) && this.popup != null) {
+                displayPopupMenu(e.getX(), e.getY());
+                e.consume();
             }
         }
     }
@@ -1669,6 +1694,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
         // if the popup menu has already been triggered, then ignore dragging...
         if (this.popup != null && this.popup.isShowing()) {
+        	e.consume();
             return;
         }
 
@@ -1698,6 +1724,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             }
             this.panLast = e.getPoint();
             this.chart.getPlot().setNotify(old);
+        	e.consume();
             return;
         }
 
@@ -1723,6 +1750,19 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         else {
             hZoom = this.domainZoomable;
             vZoom = this.rangeZoomable;
+        }
+        if (this.zoomDomainPredicate.test(e)) {
+        	if (this.orientation == PlotOrientation.HORIZONTAL) {
+        		hZoom = false;
+        	} else {
+        		vZoom = false;
+        	}
+        } else if (this.zoomRangePredicate.test(e)) {
+        	if (this.orientation == PlotOrientation.HORIZONTAL) {
+        		vZoom = false;
+        	} else {
+        		hZoom = false;
+        	}
         }
         Rectangle2D scaledDataArea = getScreenDataArea(
                 (int) this.zoomPoint.getX(), (int) this.zoomPoint.getY());
@@ -1757,6 +1797,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             drawZoomRectangle(g2, true);
         }
         g2.dispose();
+    	e.consume();
 
     }
 
@@ -1775,6 +1816,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         if (this.panLast != null) {
             this.panLast = null;
             setCursor(Cursor.getDefaultCursor());
+        	e.consume();
         }
 
         else if (this.zoomRectangle != null) {
@@ -1787,6 +1829,19 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                 hZoom = this.domainZoomable;
                 vZoom = this.rangeZoomable;
             }
+            if (this.zoomDomainPredicate.test(e)) {
+            	if (this.orientation == PlotOrientation.HORIZONTAL) {
+            		hZoom = false;
+            	} else {
+            		vZoom = false;
+            	}
+            } else if (this.zoomRangePredicate.test(e)) {
+            	if (this.orientation == PlotOrientation.HORIZONTAL) {
+            		vZoom = false;
+            	} else {
+            		hZoom = false;
+            	}
+            }
 
             boolean zoomTrigger1 = hZoom && Math.abs(e.getX()
                 - this.zoomPoint.getX()) >= this.zoomTriggerDistance;
@@ -1795,7 +1850,13 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             if (zoomTrigger1 || zoomTrigger2) {
                 if ((hZoom && (e.getX() < this.zoomPoint.getX()))
                     || (vZoom && (e.getY() < this.zoomPoint.getY()))) {
-                    restoreAutoBounds();
+                	if (this.zoomDomainPredicate.test(e)) {
+                		restoreAutoDomainBounds();
+                	} else if (this.zoomRangePredicate.test(e)) {
+                		restoreAutoRangeBounds();
+                	} else {
+                		restoreAutoBounds();
+                	}
                 }
                 else {
                     double x, y, w, h;
@@ -1848,13 +1909,13 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                 this.zoomPoint = null;
                 this.zoomRectangle = null;
             }
+        	e.consume();
 
         }
 
-        else if (e.isPopupTrigger()) {
-            if (this.popup != null) {
-                displayPopupMenu(e.getX(), e.getY());
-            }
+        else if (this.popupPredicate.test(e) && this.popup != null) {
+            displayPopupMenu(e.getX(), e.getY());
+            e.consume();
         }
 
     }
@@ -2183,6 +2244,62 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     }
 
     /**
+	 * Pans the domain axis (if enabled). Depending on the sign of the factor and
+	 * the orientation of the plot, the panning will be left/right or up/down.
+	 * 
+	 * @param factor the factor to pan
+     * @param x  the x coordinate (in screen coordinates).
+     * @param y  the y-coordinate (in screen coordinates).
+	 * @see #setDefaultPanFactor(double)
+	 * @see Pannable#getOrientation()
+	 */
+    public void panDomain(double factor, double x, double y) {
+        Plot plot = this.chart.getPlot();
+        if (!(plot instanceof Pannable)) {
+        	return;
+        }
+        Pannable p = (Pannable) plot;
+        if (!p.isDomainPannable()) {
+        	return;
+        }
+        // here we tweak the notify flag on the plot so that only
+        // one notification happens even though we update multiple
+        // axes...
+        boolean savedNotify = plot.isNotify();
+        plot.setNotify(false);
+        p.panDomainAxes(factor, this.info.getPlotInfo(), translateScreenToJava2D(new Point((int) x, (int) y)));
+        plot.setNotify(savedNotify);
+    }
+
+    /**
+	 * Pans the range axis (if enabled). Depending on the sign of the factor and
+	 * the orientation of the plot, the panning will be left/right or up/down.
+	 * 
+	 * @param factor the factor to pan
+     * @param x  the x coordinate (in screen coordinates).
+     * @param y  the y-coordinate (in screen coordinates).
+	 * @see #setDefaultPanFactor(double)
+	 * @see Pannable#getOrientation()
+	 */
+    public void panRange(double factor, double x, double y) {
+        Plot plot = this.chart.getPlot();
+        if (!(plot instanceof Pannable)) {
+        	return;
+        }
+        Pannable p = (Pannable) plot;
+        if (!p.isRangePannable()) {
+        	return;
+        }
+        // here we tweak the notify flag on the plot so that only
+        // one notification happens even though we update multiple
+        // axes...
+        boolean savedNotify = plot.isNotify();
+        plot.setNotify(false);
+        p.panRangeAxes(factor, this.info.getPlotInfo(), translateScreenToJava2D(new Point((int) x, (int) y)));
+        plot.setNotify(savedNotify);
+    }
+
+    /**
      * Returns the data area for the chart (the area inside the axes) with the
      * current scaling applied (that is, the area as it appears on screen).
      *
@@ -2340,6 +2457,22 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         this.zoomOutFactor = factor;
     }
 
+	/**
+	 * The predicate for mouse events to trigger domain zoom.
+	 */
+	public void setZoomDomainPredicate(Predicate<MouseEvent> predicate) {
+    	Args.nullNotPermitted(predicate, "predicate");
+		this.zoomDomainPredicate = predicate;
+	}
+
+	/**
+	 * The predicate for mouse events to trigger range zoom.
+	 */
+	public void setZoomRangePredicate(Predicate<MouseEvent> predicate) {
+    	Args.nullNotPermitted(predicate, "predicate");
+		this.zoomRangePredicate = predicate;
+	}
+
     /**
      * Draws zoom rectangle (if present).
      * The drawing is performed in XOR mode, therefore
@@ -2371,6 +2504,41 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         }
     }
 
+    /**
+     * Returns the default pan factor.
+     *
+     * @return The default pan factor.
+     *
+     * @see #setDefaultPanFactor(double)
+     */
+    public double getDefaultPanFactor() {
+		return defaultPanFactor;
+	}
+    
+    /**
+     * Sets the default pan factor.
+     *
+     * @param factor the default pan factor.
+     *
+     * @see #getDefaultPanFactor()
+     */
+    public void setDefaultPanFactor(double panFactor) {
+		this.defaultPanFactor = panFactor;
+	}
+    
+	/**
+	 * Sets the pan mask/predicate to be used for event handlers.
+	 * 
+	 * @param predicate
+	 *            the pan mask/predicate to be used for event handlers.
+	 * @see InputEvent#isControlDown()
+	 * @see InputEvent#isAltDown()
+	 */
+    public void setPanPredicate(Predicate<MouseEvent> predicate) {
+    	Args.nullNotPermitted(predicate, "predicate");
+		this.panPredicate = predicate;
+	}
+	
     /**
      * Displays a dialog that allows the user to edit the properties for the
      * current chart.
