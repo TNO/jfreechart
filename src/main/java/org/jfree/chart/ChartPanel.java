@@ -270,6 +270,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
     /** The popup menu for the frame. */
     protected JPopupMenu popup;
+    
+    /** The mask/predicate to show popup menus */
+    protected Predicate<MouseEvent> popupPredicate = MouseEvent::isPopupTrigger;
 
     /** The drawing info collected the last time the chart was drawn. */
     protected ChartRenderingInfo info;
@@ -829,6 +832,16 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     public void setPopupMenu(JPopupMenu popup) {
         this.popup = popup;
     }
+    
+	/**
+	 * Sets the mask/predicate to match before showing a popup menu.
+	 * 
+	 * @param popupPredicate the mask/predicate to match before showing a popup
+	 *                       menu.
+	 */
+	public void setPopupPredicate(Predicate<MouseEvent> popupPredicate) {
+		this.popupPredicate = popupPredicate;
+	}
 
     /**
      * Returns the chart rendering info from the most recent chart redraw.
@@ -1632,6 +1645,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                         this.panLast = e.getPoint();
                         setCursor(Cursor.getPredefinedCursor(
                                 Cursor.MOVE_CURSOR));
+                    	e.consume();
                     }
                 }
                 // the actual panning occurs later in the mouseDragged() 
@@ -1647,10 +1661,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             else {
                 this.zoomPoint = null;
             }
-            if (e.isPopupTrigger()) {
-                if (this.popup != null) {
-                    displayPopupMenu(e.getX(), e.getY());
-                }
+            if (this.popupPredicate.test(e) && this.popup != null) {
+                displayPopupMenu(e.getX(), e.getY());
+                e.consume();
             }
         }
     }
@@ -1681,6 +1694,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
         // if the popup menu has already been triggered, then ignore dragging...
         if (this.popup != null && this.popup.isShowing()) {
+        	e.consume();
             return;
         }
 
@@ -1710,6 +1724,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             }
             this.panLast = e.getPoint();
             this.chart.getPlot().setNotify(old);
+        	e.consume();
             return;
         }
 
@@ -1782,6 +1797,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             drawZoomRectangle(g2, true);
         }
         g2.dispose();
+    	e.consume();
 
     }
 
@@ -1800,6 +1816,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         if (this.panLast != null) {
             this.panLast = null;
             setCursor(Cursor.getDefaultCursor());
+        	e.consume();
         }
 
         else if (this.zoomRectangle != null) {
@@ -1892,13 +1909,13 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
                 this.zoomPoint = null;
                 this.zoomRectangle = null;
             }
+        	e.consume();
 
         }
 
-        else if (e.isPopupTrigger()) {
-            if (this.popup != null) {
-                displayPopupMenu(e.getX(), e.getY());
-            }
+        else if (this.popupPredicate.test(e) && this.popup != null) {
+            displayPopupMenu(e.getX(), e.getY());
+            e.consume();
         }
 
     }
