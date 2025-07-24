@@ -1,9 +1,11 @@
 JFreeChart
 ==========
 
-Version 1.6.0, not yet released.
+Version 1.6.0-RC6.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jfree/jfreechart/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jfree/jfreechart)
+**NOTE:** This site hosts a fork of the original `org.jfree.jfreechart` library.
+All changes compared to the original library are described in the [History](#history),
+and are provided back by means of (pending) pull requests to the original library.
 
 Overview
 --------
@@ -15,16 +17,12 @@ export to multiple formats including SVG, PNG and PDF).
 
 The home page for the project is:
 
-http://www.jfree.org/jfreechart
+https://www.jfree.org/jfreechart
 
 JFreeChart requires JDK 8 or later.  If JavaFX support is required, you
 need to also include the JFreeChart-FX extensions:
 
 https://github.com/jfree/jfreechart-fx
-
-API docs can be found here:
-
-[https://yuri-blankenstein-tno.github.io/jfreechart/apidocs/](https://yuri-blankenstein-tno.github.io/jfreechart/apidocs/)
 
 The library is licensed under the terms of the GNU Lesser General Public 
 License (LGPL) version 2.1 or later.
@@ -34,26 +32,11 @@ Using JFreeChart
 ----------------
 To use JFreeChart in your projects, add the following dependency to your build tool:
 
-	<repositories>
-        <repository>
-            <id>jfreechart-tno</id>
-            <url>https://yuri-blankenstein-tno.github.io/jfreechart/maven-repo</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <dependencies>
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<version>1.6.0-RC5</version>
-		</dependency>
-    </dependencies>
+    <dependency>
+        <groupId>nl.esi</groupId>
+        <artifactId>jfreechart</artifactId>
+        <version>1.6.0-RC6</version>
+    </dependency>
 
 
 Building JFreeChart
@@ -62,7 +45,7 @@ You can build JFreeChart using Maven with the following command (issued from the
 
     mvn clean verify
 
-The build requires JDK 8 or later.
+The build requires JDK 17 or later.
 
 Demos
 -----
@@ -75,16 +58,22 @@ at GitHub:
 
 History
 -------
-
-##### Version 1.6.0 (not-yet-released)
+##### Version 1.6.0 (24 July 2025)
 - Enable scrollbars by refactoring `ValueAxis#autoAdjustRange()` ([#220](https://github.com/jfree/jfreechart/issues/220));
 - Exposing `getAnnotations()` method on `XYItemRenderer` interface ([#221](https://github.com/jfree/jfreechart/issues/221));
 - Adding means to measure and illustrate differences in XYPlots ([#224](https://github.com/jfree/jfreechart/issues/224));
-- Add clearSeriesXXX methods for all series settings in AbstractRenderer ([#364](https://github.com/jfree/jfreechart/issues/364))
-
-##### Version 1.5.6 (not yet released)
 - fix zooming on CombinedDomainXYPlot with OfflineRenderingChartPanel ([#351](https://github.com/jfree/jfreechart/issues/351))
-- fix calculating if label fits inside bar for XYBarRenderer ([#366](https://github.com/jfree/jfreechart/issues/366))
+- alternative solution for issue [#340](https://github.com/jfree/jfreechart/issues/340) that yields better performance ([#362](https://github.com/jfree/jfreechart/pull/362))
+
+##### Version 1.5.6 (21 May 2025)
+- added `setSymbols` method to `SymbolAxis` ([#421](https://github.com/jfree/jfreechart/pull/421))
+- added label padding to `Crosshair` ([#414](https://github.com/jfree/jfreechart/pull/414))
+- add clearSeriesXXX methods for all series settings in `AbstractRenderer` ([#364](https://github.com/jfree/jfreechart/issues/364))
+- fix calculating if label fits inside bar for `XYBarRenderer` ([#366](https://github.com/jfree/jfreechart/issues/366))
+- set default background paint to `LIGHT_GRAY` ([#324](https://github.com/jfree/jfreechart/issues/324))
+- deprecated all classes in `org.jfree.chart.servlet.*` ([#385](https://github.com/jfree/jfreechart/issues/385))
+- updated `pom.xml` with new Maven publishing flow and latest plugin versions
+- various minor improvements
 
 ##### Version 1.5.5 (23 June 2024)
 - added `XYBezierRenderer` by Javier Robes ([#286](https://github.com/jfree/jfreechart/pull/286))
@@ -201,7 +190,7 @@ Note: some (supposed) security vulnerabilities have been reported for v1.5.4:
 - simplified `ChartFactory` methods;
 - added new methods to `DatasetUtilities` to interpolate y-values in `XYDatasets`;
 - added URLs to labels on `CategoryAxis`;
-- seamless integration with JFreeSVG (http://www.jfree.org/jfreesvg/) and OrsonPDF 
+- seamless integration with JFreeSVG (https://www.jfree.org/jfreesvg/) and OrsonPDF 
 (http://www.object-refinery.com/pdf/);
 - improved the consistency of the `SWTGraphics2D` implementation;  
 
@@ -890,7 +879,7 @@ adjustments (there should be no breakage of applications coded to the 1.0.0 API)
 
 ###### API adjustments
 - `BarRenderer`: added a new flag (`includeBaseInRange`), plus accessor 
-    methods, that controls whether or not the base value for the bar is 
+    methods, that controls whether the base value for the bar is 
     included in the range calculated by the `findRangeBounds()` method;
 - `BubbleXYItemLabelGenerator`: new class;
 - `Range`: added a new method `expandToInclude(Range, double)`, this is used by 
@@ -1392,6 +1381,7 @@ JFreeChart wouldn't be half the library that it is today without the contributio
 - Richard Atkinson
 - David Basten
 - David Berry
+- Yuri Blankenstein
 - Chris Boek
 - Zoheb Borbora
 - Anthony Boulestreau
