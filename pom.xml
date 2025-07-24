@@ -105,7 +105,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
                 <configuration>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
@@ -196,6 +195,12 @@
 
         <pluginManagement>
             <plugins>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -323,6 +328,7 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.11.2</version>
                         <configuration>
+                            <outputDirectory>${project.build.directory}/dist</outputDirectory>
                             <linksource>true</linksource>
                             <source>8</source>
                             <docfilessubdirs>true</docfilessubdirs>
@@ -356,7 +362,7 @@
                         <artifactId>maven-invoker-plugin</artifactId>
                         <version>3.9.0</version>
                         <configuration>
-                            <localRepositoryPath>${project.build.directory}/maven-repo</localRepositoryPath>
+                            <localRepositoryPath>${project.build.directory}/dist/maven-repo</localRepositoryPath>
                         </configuration>
                         <executions>
                             <execution>
@@ -371,23 +377,28 @@
 
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>3.7.1</version>
+                        <artifactId>maven-resources-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>package-website</id>
+                                <id>copy-resources</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>single</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <descriptors>
-                                        <descriptor>assembly.xml</descriptor>
-                                    </descriptors>
+                                    <outputDirectory>${project.build.directory}/dist</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${basedir}</directory>
+                                            <include>README.md</include>
+                                            <filtering>true</filtering>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
+
                 </plugins>
             </build>
         </profile>

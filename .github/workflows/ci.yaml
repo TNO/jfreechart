@@ -25,8 +25,7 @@ jobs:
         with:
           name: jfreechart-dist
           path: |
-            target/apidocs
-            target/maven-repo
+            target/dist
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
