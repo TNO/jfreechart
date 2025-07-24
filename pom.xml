@@ -32,7 +32,7 @@
         <system>GitHub Issues</system>
     </issueManagement>
     <scm>
-        <connection>scm:git:git:https://github.com/TNO/jfreechart.git</connection>
+        <connection>scm:git:git@github.com:TNO/jfreechart.git</connection>
         <url>https://github.com/TNO/jfreechart</url>
     </scm>
 
@@ -248,7 +248,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -359,28 +359,10 @@
 
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-invoker-plugin</artifactId>
-                        <version>3.9.0</version>
-                        <configuration>
-                            <localRepositoryPath>${project.build.directory}/dist/maven-repo</localRepositoryPath>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>install-local-repo</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>install</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-resources-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>copy-resources</id>
+                                <id>copy-readme</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>copy-resources</goal>
@@ -395,6 +377,24 @@
                                         </resource>
                                     </resources>
                                 </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-invoker-plugin</artifactId>
+                        <version>3.9.0</version>
+                        <configuration>
+                            <localRepositoryPath>${project.build.directory}/dist/maven-repo</localRepositoryPath>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-local-repo</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>install</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
