@@ -58,7 +58,7 @@ at GitHub:
 
 History
 -------
-##### Version 1.6.0 (${build.date})
+##### Version ${project.version} (${build.date})
 - Enable scrollbars by refactoring `ValueAxis#autoAdjustRange()` ([#220](https://github.com/jfree/jfreechart/issues/220));
 - Exposing `getAnnotations()` method on `XYItemRenderer` interface ([#221](https://github.com/jfree/jfreechart/issues/221));
 - Adding means to measure and illustrate differences in XYPlots ([#224](https://github.com/jfree/jfreechart/issues/224));
