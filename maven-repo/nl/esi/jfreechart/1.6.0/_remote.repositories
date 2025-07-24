@@ -1,0 +1,6 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Jul 24 14:48:48 UTC 2025
+jfreechart-1.6.0.jar>=
+jfreechart-1.6.0-sources.jar>=
+jfreechart-1.6.0-javadoc.jar>=
+jfreechart-1.6.0.pom>=

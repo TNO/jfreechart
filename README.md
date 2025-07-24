@@ -1,7 +1,7 @@
 JFreeChart
 ==========
 
-Version 1.6.0-RC6.
+Version 1.6.0.
 
 **NOTE:** This site hosts a fork of the original `org.jfree.jfreechart` library.
 All changes compared to the original library are described in the [History](#history),
@@ -35,7 +35,7 @@ To use JFreeChart in your projects, add the following dependency to your build t
     <dependency>
         <groupId>nl.esi</groupId>
         <artifactId>jfreechart</artifactId>
-        <version>1.6.0-RC6</version>
+        <version>1.6.0</version>
     </dependency>
 
 
