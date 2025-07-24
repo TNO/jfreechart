@@ -16,6 +16,7 @@
             <directory>${project.build.directory}</directory>
             <outputDirectory />
             <includes>
+                <include>apidocs/**</include>
                 <include>maven-repo/**</include>
             </includes>
         </fileSet>
